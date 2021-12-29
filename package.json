@@ -5,15 +5,18 @@
   "description": "",
   "main": "fetch-source.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node-gyp build",
+    "fetch-source": "node ./fetch-source",
+    "rebuild": "node-gyp rebuild"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/bindings": "^1.5.1",
     "@types/extract-zip": "^2.0.1",
     "@types/got": "^9.6.12",
-    "cmake-js": "^6.3.0",
+    "bindings": "^1.5.0",
     "extract-zip": "^2.0.1",
     "got": "^12.0.0",
     "node-gyp": "^8.4.1"
