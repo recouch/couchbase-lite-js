@@ -3,3 +3,5 @@ downloads
 lib
 node_modules
 .DS_Store
+coverage
+*.cblite2

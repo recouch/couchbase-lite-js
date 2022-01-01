@@ -1,0 +1,5 @@
+{
+  "preset": "ts-jest",
+  "collectCoverage": true,
+  "collectCoverageFrom": ["src/**/*.{js,ts}"]
+}

@@ -15,7 +15,9 @@
             "include_dirs": [
                 "lib/libcblite-3.0.0/include",
             ],
-            "sources": ["src/db.c"],
+            "sources": [
+                "src/main.c",
+            ],
 
             "libraries": [
                 "-Wl,-rpath,@loader_path/.",

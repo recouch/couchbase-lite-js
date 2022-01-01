@@ -1,24 +1,43 @@
 {
   "name": "couchbase-lite",
   "version": "0.1.0",
-  "type": "module",
   "description": "",
   "main": "fetch-source.js",
   "scripts": {
     "build": "node-gyp build",
     "fetch-source": "node ./fetch-source",
-    "rebuild": "node-gyp rebuild"
+    "rebuild": "node-gyp rebuild",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@types/bindings": "^1.5.1",
-    "@types/extract-zip": "^2.0.1",
-    "@types/got": "^9.6.12",
     "bindings": "^1.5.0",
     "extract-zip": "^2.0.1",
     "got": "^12.0.0",
     "node-gyp": "^8.4.1"
+  },
+  "devDependencies": {
+    "@types/bindings": "^1.5.1",
+    "@types/extract-zip": "^2.0.1",
+    "@types/got": "^9.6.12",
+    "@types/jest": "^27.4.0",
+    "@types/typescript": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.8.1",
+    "@typescript-eslint/parser": "^5.8.1",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-import-resolver-typescript": "^2.5.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "jest": "^27.4.5",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
   }
 }
