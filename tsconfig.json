@@ -4,7 +4,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
-    "outDir": "lib",
+    "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
     "declarationMap": true,

@@ -1,8 +1,8 @@
 {
-  "name": "couchbase-lite",
+  "name": "couchbase-lite-js",
   "version": "0.1.0",
   "description": "",
-  "main": "fetch-source.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "node-gyp build",
     "fetch-source": "node ./fetch-source",

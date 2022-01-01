@@ -1,5 +1,5 @@
-import { CBL } from './CBL';
-import type { Database } from './Database';
+import { CBL } from './CBL'
+import type { Database } from './Database'
 
 /**
  * Couchbase Lite document reference
@@ -9,7 +9,7 @@ import type { Database } from './Database';
  */
 class CBLDocumentRef {
   #external = true
-  private constructor() {}
+  private constructor() { /* noop */ }
 }
 
 interface ConstructorParams {
@@ -18,11 +18,11 @@ interface ConstructorParams {
   ref: CBLDocumentRef
 }
 
-export class Document {
-  database: Database;
-  readonly id?: string;
-  readonly ref: CBLDocumentRef;
-  value: object = {}
+export class Document<T extends Record<string, unknown> = Record<string, unknown>> {
+  database: Database
+  readonly id?: string
+  readonly ref: CBLDocumentRef
+  value: T
 
   constructor({ database, id, ref }: ConstructorParams) {
     this.database = database

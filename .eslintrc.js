@@ -23,7 +23,6 @@ module.exports = {
     // Usage with Prettier, provided by 'eslint-config-prettier'.
     // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin#usage-with-prettier
     'prettier',
-    'prettier/@typescript-eslint',
     // 'prettier/vue',
 
     'standard',

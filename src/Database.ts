@@ -1,5 +1,5 @@
-import { CBL } from './CBL';
-import { Document } from './Document';
+import { CBL } from './CBL'
+import { Document } from './Document'
 
 /**
  * Couchbase Lite database reference
@@ -9,7 +9,7 @@ import { Document } from './Document';
  */
 class CBLDatabaseRef {
   #external = true
-  private constructor() {}
+  private constructor() { /* noop */ }
 }
 
 interface ConstructorParams {
@@ -43,7 +43,7 @@ export class Database {
   saveDocument(document: Document): boolean {
     return CBL.Database_SaveDocument(this.ref, JSON.stringify(document.value))
   }
-  
+
   static open(name: string): Database {
     const ref = CBL.Database_Open(name)
 
