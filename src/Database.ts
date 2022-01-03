@@ -26,7 +26,7 @@ export class Database {
     this.name = name
   }
 
-  // Database operations
+  // Database lifecycle operations
   close(): boolean {
     try {
       return CBL.Database_Close(this.ref)
@@ -35,13 +35,27 @@ export class Database {
     }
   }
 
+  delete(): boolean {
+    try {
+      return CBL.Database_Delete(this.ref)
+    } catch {
+      return false
+    }
+  }
+
+  addChangeListener(changeHandler: (docIDs: string[]) => void): (() => void) {
+    return CBL.Database_AddChangeListener(this.ref, changeHandler)
+  }
+
   // Document operations
   getDocument(id: string): Document {
-    return CBL.Database_GetDocument(this.ref, id)
+    const ref = CBL.Database_GetDocument(this.ref, id)
+
+    return new Document({ database: this, id, ref })
   }
 
   saveDocument(document: Document): boolean {
-    return CBL.Database_SaveDocument(this.ref, JSON.stringify(document.value))
+    return CBL.Database_SaveDocument(this.ref, document.ref, JSON.stringify(document.value))
   }
 
   static open(name: string): Database {

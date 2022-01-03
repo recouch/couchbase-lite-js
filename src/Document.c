@@ -3,8 +3,32 @@
 #include <stdio.h>
 #include "cbl/CouchbaseLite.h"
 
+// CBLDocument_ID
+napi_value Document_ID(napi_env env, napi_callback_info info)
+{
+  napi_status status;
+
+  size_t argc = 1;
+  napi_value args[1];
+  status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+  assert(status == napi_ok);
+
+  CBLDocument *doc;
+  status = napi_get_value_external(env, args[0], (void *)&doc);
+  assert(status == napi_ok);
+
+  FLString id = CBLDocument_ID(doc);
+
+  napi_value res;
+  status = napi_create_string_utf8(env, id.buf, id.size, &res);
+  assert(status == napi_ok);
+
+  return res;
+}
+
 // CBLDatabase_GetDocument
-napi_value Database_GetDocument(napi_env env, napi_callback_info info)
+napi_value
+Database_GetDocument(napi_env env, napi_callback_info info)
 {
   napi_status status;
   CBLError err;
@@ -21,7 +45,6 @@ napi_value Database_GetDocument(napi_env env, napi_callback_info info)
   size_t buffer_size = 128;
   char docId[buffer_size];
   napi_get_value_string_utf8(env, args[1], docId, buffer_size, NULL);
-  printf("docId: %s\n", docId);
   assert(status == napi_ok);
 
   const CBLDocument *doc = CBLDatabase_GetDocument(database, FLStr(docId), &err);
@@ -31,15 +54,11 @@ napi_value Database_GetDocument(napi_env env, napi_callback_info info)
     napi_throw_error(env, "", "Error saving document\n");
   }
 
-  FLSliceResult docJson = CBLDocument_CreateJSON(doc);
-  napi_value json;
-  status = napi_create_string_utf8(env, docJson.buf, docJson.size, &json);
+  napi_value res;
+  status = napi_create_external(env, (void *)doc, NULL, NULL, &res);
   assert(status == napi_ok);
 
-  FLSliceResult_Release(docJson);
-  CBLDocument_Release(doc);
-
-  return json;
+  return res;
 }
 
 // CBLDatabase_DeleteDocument
@@ -58,7 +77,7 @@ napi_value Database_DeleteDocument(napi_env env, napi_callback_info info)
   assert(status == napi_ok);
 
   CBLDocument *doc;
-  status = napi_get_value_external(env, args[0], (void *)&doc);
+  status = napi_get_value_external(env, args[1], (void *)&doc);
   assert(status == napi_ok);
 
   bool didDelete = CBLDatabase_DeleteDocument(database, doc, &err);
@@ -99,28 +118,18 @@ napi_value Database_SaveDocument(napi_env env, napi_callback_info info)
   status = napi_get_value_external(env, args[0], (void *)&database);
   assert(status == napi_ok);
 
-  size_t str_size;
-  napi_get_value_string_utf8(env, args[1], NULL, 0, &str_size);
-  char *json;
-  json = (char *)calloc(str_size + 1, sizeof(char));
-  str_size = str_size + 1;
-  napi_get_value_string_utf8(env, args[1], json, str_size, NULL);
-
-  CBLDocument *doc = CBLDocument_Create();
-  bool didSetJson = CBLDocument_SetJSON(doc, FLStr(json), &err);
-
-  if (!didSetJson)
-  {
-    napi_throw_error(env, "", "Set JSON failed");
-    return res;
-  }
+  CBLDocument *doc;
+  status = napi_get_value_external(env, args[1], (void *)&doc);
+  assert(status == napi_ok);
 
   bool didSave = CBLDatabase_SaveDocument(database, doc, &err);
   napi_get_boolean(env, didSave, &res);
 
   if (!didSave)
   {
-    napi_throw_error(env, "", "Error saving document\n");
+    char errorCode[10];
+    sprintf(errorCode, "%d", 42);
+    napi_throw_error(env, errorCode, "Error saving document\n");
   }
 
   return res;
@@ -131,21 +140,14 @@ napi_value Document_Create(napi_env env, napi_callback_info info)
 {
   napi_status status;
   CBLDocument *doc = CBLDocument_Create();
-  FLMutableDict properties = CBLDocument_MutableProperties(doc);
 
-  FLMutableDict_SetString(properties, FLSTR("name"), FLSTR("justin"));
-
-  FLSliceResult docJson = CBLDocument_CreateJSON(doc);
-
-  napi_value json;
-  status = napi_create_string_utf8(env, docJson.buf, docJson.size, &json);
+  napi_value res;
+  status = napi_create_external(env, doc, NULL, NULL, &res);
   assert(status == napi_ok);
 
-  FLSliceResult_Release(docJson);
-  CBLDocument_Release(doc);
-
-  return json;
+  return res;
 }
+
 // CBLDocument_CreateWithID
 napi_value Document_CreateWithID(napi_env env, napi_callback_info info)
 {
@@ -171,16 +173,12 @@ napi_value Document_CreateWithID(napi_env env, napi_callback_info info)
   napi_get_value_string_utf8(env, args[0], docID, buffer_size, NULL);
 
   CBLDocument *doc = CBLDocument_CreateWithID(FLStr(docID));
-  FLSliceResult docJson = CBLDocument_CreateJSON(doc);
 
-  napi_value json;
-  status = napi_create_string_utf8(env, docJson.buf, docJson.size, &json);
+  napi_value res;
+  status = napi_create_external(env, doc, NULL, NULL, &res);
   assert(status == napi_ok);
 
-  FLSliceResult_Release(docJson);
-  CBLDocument_Release(doc);
-
-  return json;
+  return res;
 }
 
 // CBLDocument_MutableProperties
@@ -188,7 +186,84 @@ napi_value Document_CreateWithID(napi_env env, napi_callback_info info)
 // {
 // }
 
-// CBLDocument_Properties
-// napi_value Document_Properties(napi_env env, napi_callback_info info)
-// {
-// }
+// CBLDocument_CreateJSON
+napi_value Document_CreateJSON(napi_env env, napi_callback_info info)
+{
+  napi_status status;
+
+  size_t argc = 1;
+  napi_value args[1];
+  status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+  assert(status == napi_ok);
+
+  CBLDocument *doc;
+  status = napi_get_value_external(env, args[0], (void *)&doc);
+  assert(status == napi_ok);
+
+  FLSliceResult docJson = CBLDocument_CreateJSON(doc);
+  napi_value json;
+  status = napi_create_string_utf8(env, docJson.buf, docJson.size, &json);
+  assert(status == napi_ok);
+
+  FLSliceResult_Release(docJson);
+
+  return json;
+}
+
+// CBLDocument_SetJSON
+napi_value Document_SetJSON(napi_env env, napi_callback_info info)
+{
+  napi_status status;
+
+  size_t argc = 2;
+  napi_value args[2];
+  status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+  assert(status == napi_ok);
+
+  CBLDocument *doc;
+  status = napi_get_value_external(env, args[0], (void *)&doc);
+  assert(status == napi_ok);
+
+  size_t str_size;
+  napi_get_value_string_utf8(env, args[1], NULL, 0, &str_size);
+  char *json;
+  json = (char *)calloc(str_size + 1, sizeof(char));
+  str_size = str_size + 1;
+  napi_get_value_string_utf8(env, args[1], json, str_size, NULL);
+
+  CBLError err;
+  bool didSetJson = CBLDocument_SetJSON(doc, FLStr(json), &err);
+
+  if (!didSetJson)
+  {
+    napi_throw_error(env, "", "Set JSON failed");
+  }
+
+  napi_value res;
+  status = napi_get_boolean(env, didSetJson, &res);
+  assert(status == napi_ok);
+
+  return res;
+}
+
+// CBLDocument_Release
+napi_value Document_Release(napi_env env, napi_callback_info info)
+{
+  napi_status status;
+
+  size_t argc = 1;
+  napi_value args[1];
+  status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+  assert(status == napi_ok);
+
+  CBLDocument *doc;
+  status = napi_get_value_external(env, args[0], (void *)&doc);
+  assert(status == napi_ok);
+
+  CBLDocument_Release(doc);
+
+  napi_value res;
+  napi_get_boolean(env, true, &res);
+
+  return res;
+}

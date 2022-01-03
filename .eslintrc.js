@@ -15,6 +15,8 @@ module.exports = {
     'plugin:import/warnings',
     'plugin:import/typescript',
 
+    'plugin:jest/recommended',
+
     // `plugin:vue/essential` by default, consider switching to `plugin:vue/strongly-recommended`
     //  or `plugin:vue/recommended` for stricter rules.
     // See https://github.com/vuejs/eslint-plugin-vue#priority-a-essential-error-prevention
