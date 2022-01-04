@@ -49,14 +49,15 @@ Database_GetDocument(napi_env env, napi_callback_info info)
 
   const CBLDocument *doc = CBLDatabase_GetDocument(database, FLStr(docId), &err);
 
-  if (!doc)
-  {
-    napi_throw_error(env, "", "Error saving document\n");
-  }
-
   napi_value res;
-  status = napi_create_external(env, (void *)doc, NULL, NULL, &res);
-  assert(status == napi_ok);
+  if (doc)
+  {
+    assert(napi_create_external(env, (void *)doc, NULL, NULL, &res) == napi_ok);
+  }
+  else
+  {
+    assert(napi_get_null(env, &res) == napi_ok);
+  }
 
   return res;
 }
