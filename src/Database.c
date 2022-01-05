@@ -2,6 +2,7 @@
 #include <node_api.h>
 #include <stdio.h>
 #include "cbl/CouchbaseLite.h"
+#include "Listener.h"
 #include "util.c"
 
 // CBLDatabase_Open
@@ -107,17 +108,17 @@ struct ChangedDocs
 {
   FLString *docIDs;
   unsigned numDocs;
-} changed_docs;
+};
 
-static void DatabaseChangeListener(void *func, const CBLDatabase *db, unsigned numDocs, FLString docIDs[])
+static void DatabaseChangeListener(void *cb, const CBLDatabase *db, unsigned numDocs, FLString docIDs[])
 {
   struct ChangedDocs *data = malloc(sizeof(numDocs) + sizeof(*docIDs));
   data->docIDs = docIDs;
   data->numDocs = numDocs;
 
-  assert(napi_acquire_threadsafe_function((napi_threadsafe_function)func) == napi_ok);
-  assert(napi_call_threadsafe_function((napi_threadsafe_function)func, data, napi_tsfn_nonblocking) == napi_ok);
-  assert(napi_release_threadsafe_function((napi_threadsafe_function)func, napi_tsfn_release) == napi_ok);
+  assert(napi_acquire_threadsafe_function((napi_threadsafe_function)cb) == napi_ok);
+  assert(napi_call_threadsafe_function((napi_threadsafe_function)cb, data, napi_tsfn_nonblocking) == napi_ok);
+  assert(napi_release_threadsafe_function((napi_threadsafe_function)cb, napi_tsfn_release) == napi_ok);
 }
 
 static void DatabaseChangeListenerCallJS(napi_env env, napi_value js_cb, void *context, void *data)
@@ -147,8 +148,7 @@ static void DatabaseChangeListenerCallJS(napi_env env, napi_value js_cb, void *c
 }
 
 // CBLDatabase_AddChangeListener
-napi_value
-Database_AddChangeListener(napi_env env, napi_callback_info info)
+napi_value Database_AddChangeListener(napi_env env, napi_callback_info info)
 {
   size_t argc = 2;
   napi_value args[2];
@@ -163,19 +163,20 @@ Database_AddChangeListener(napi_env env, napi_callback_info info)
                                  NAPI_AUTO_LENGTH,
                                  &async_resource_name) == napi_ok);
 
-  napi_threadsafe_function cb;
-  assert(napi_create_threadsafe_function(env, args[1], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, DatabaseChangeListenerCallJS, &cb) == napi_ok);
-  assert(napi_unref_threadsafe_function(env, cb) == napi_ok);
+  napi_threadsafe_function listenerCallback;
+  assert(napi_create_threadsafe_function(env, args[1], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, DatabaseChangeListenerCallJS, &listenerCallback) == napi_ok);
+  assert(napi_unref_threadsafe_function(env, listenerCallback) == napi_ok);
 
-  CBLListenerToken *token = CBLDatabase_AddChangeListener(database, DatabaseChangeListener, cb);
+  CBLListenerToken *token = CBLDatabase_AddChangeListener(database, DatabaseChangeListener, listenerCallback);
 
   if (!token)
   {
     napi_throw_error(env, "", "Error adding change listener\n");
   }
 
-  napi_value res;
-  assert(napi_create_external(env, token, NULL, NULL, &res) == napi_ok);
+  struct StopListenerData *stopListenerData = newStopListenerData(listenerCallback, token);
+  napi_value stopListener;
+  assert(napi_create_function(env, "stopDatabaseChangeListener", NAPI_AUTO_LENGTH, StopChangeListener, stopListenerData, &stopListener) == napi_ok);
 
-  return res;
+  return stopListener;
 }

@@ -1,6 +1,6 @@
 #include "Database.c"
 #include "Document.c"
-#include "Listener.c"
+#include "Listener.h"
 
 #define DECLARE_NAPI_METHOD(name, func)     \
   {                                         \

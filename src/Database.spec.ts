@@ -1,6 +1,5 @@
 import fs from 'fs'
 import { join } from 'path'
-import { removeListener } from './Listener'
 import { createTestDatabase } from './test-util'
 import { Database, MutableDocument } from '.'
 
@@ -74,7 +73,9 @@ describe('Database', () => {
       const db = createTestDatabase()
       const doc = MutableDocument.create(db)
       const fn = jest.fn()
-      const token = db.addChangeListener(fn)
+      const stop = db.addChangeListener(fn)
+
+      expect(typeof stop).toBe('function')
 
       await new Promise(resolve => setTimeout(resolve, 10))
       expect(fn).not.toHaveBeenCalled()
@@ -84,7 +85,8 @@ describe('Database', () => {
       await new Promise(resolve => setTimeout(resolve, 10))
       expect(fn).toHaveBeenCalledWith([doc.id])
 
-      removeListener(token)
+      expect(stop()).toBe(true)
+
       doc.release()
       db.delete()
     })
@@ -172,7 +174,9 @@ describe('Database', () => {
       const db = createTestDatabase({ testDoc: { children: 1 } })
       const doc = db.getMutableDocument('testDoc')!
       const fn = jest.fn()
-      const token = db.addDocumentChangeListener('testDoc', fn)
+      const stop = db.addDocumentChangeListener('testDoc', fn)
+
+      expect(typeof stop).toBe('function')
 
       await new Promise(resolve => setTimeout(resolve, 10))
       expect(fn).not.toHaveBeenCalled()
@@ -189,7 +193,8 @@ describe('Database', () => {
       doc2.save()
       expect(fn).not.toHaveBeenCalled()
 
-      removeListener(token)
+      expect(stop()).toBe(true)
+
       doc.release()
       db.delete()
     })

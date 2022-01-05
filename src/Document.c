@@ -2,6 +2,7 @@
 #include <node_api.h>
 #include <stdio.h>
 #include "cbl/CouchbaseLite.h"
+#include "Listener.h"
 
 // CBLDocument_ID
 napi_value Document_ID(napi_env env, napi_callback_info info)
@@ -313,8 +314,7 @@ static void DocumentChangeListenerCallJS(napi_env env, napi_value js_cb, void *c
 }
 
 // CBLDatabase_AddChangeListener
-napi_value
-Database_AddDocumentChangeListener(napi_env env, napi_callback_info info)
+napi_value Database_AddDocumentChangeListener(napi_env env, napi_callback_info info)
 {
   size_t argc = 3;
   napi_value args[3];
@@ -333,19 +333,20 @@ Database_AddDocumentChangeListener(napi_env env, napi_callback_info info)
                                  NAPI_AUTO_LENGTH,
                                  &async_resource_name) == napi_ok);
 
-  napi_threadsafe_function cb;
-  assert(napi_create_threadsafe_function(env, args[2], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, DocumentChangeListenerCallJS, &cb) == napi_ok);
-  assert(napi_unref_threadsafe_function(env, cb) == napi_ok);
+  napi_threadsafe_function listenerCallback;
+  assert(napi_create_threadsafe_function(env, args[2], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, DocumentChangeListenerCallJS, &listenerCallback) == napi_ok);
+  assert(napi_unref_threadsafe_function(env, listenerCallback) == napi_ok);
 
-  CBLListenerToken *token = CBLDatabase_AddDocumentChangeListener(database, FLStr(docID), DocumentChangeListener, cb);
+  CBLListenerToken *token = CBLDatabase_AddDocumentChangeListener(database, FLStr(docID), DocumentChangeListener, listenerCallback);
 
   if (!token)
   {
     napi_throw_error(env, "", "Error adding change listener\n");
   }
 
-  napi_value res;
-  assert(napi_create_external(env, token, NULL, NULL, &res) == napi_ok);
+  struct StopListenerData *stopListenerData = newStopListenerData(listenerCallback, token);
+  napi_value stopListener;
+  assert(napi_create_function(env, "stopDatabaseChangeListener", NAPI_AUTO_LENGTH, StopChangeListener, stopListenerData, &stopListener) == napi_ok);
 
-  return res;
+  return stopListener;
 }
