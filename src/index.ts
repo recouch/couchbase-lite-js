@@ -1,2 +1,2 @@
-export { Database } from './Database'
-export { Document } from './Document'
+export * from './Database'
+export * from './Document'

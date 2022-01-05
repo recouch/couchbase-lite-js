@@ -20,6 +20,7 @@ NAPI_MODULE_INIT(/* env, exports */)
 
       // Database document operations
       DECLARE_NAPI_METHOD("Database_GetDocument", Database_GetDocument),
+      DECLARE_NAPI_METHOD("Database_GetMutableDocument", Database_GetMutableDocument),
       DECLARE_NAPI_METHOD("Database_SaveDocument", Database_SaveDocument),
       DECLARE_NAPI_METHOD("Database_DeleteDocument", Database_DeleteDocument),
 

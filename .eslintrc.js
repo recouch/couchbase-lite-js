@@ -90,7 +90,14 @@ module.exports = {
     'import/no-unresolved': [2, { commonjs: true, amd: true }],
     'import/order': 2,
   },
-
+  overrides: [
+    {
+      files: ['src/**/*.spec.ts'],
+      rules: {
+        '@typescript-eslint/ban-ts-comment': 0,
+      },
+    },
+  ],
   settings: {
     'import/parsers': {
       '@typescript-eslint/parser': ['.ts', '.tsx'],

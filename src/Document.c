@@ -27,8 +27,7 @@ napi_value Document_ID(napi_env env, napi_callback_info info)
 }
 
 // CBLDatabase_GetDocument
-napi_value
-Database_GetDocument(napi_env env, napi_callback_info info)
+napi_value Database_GetDocument(napi_env env, napi_callback_info info)
 {
   napi_status status;
   CBLError err;
@@ -48,6 +47,41 @@ Database_GetDocument(napi_env env, napi_callback_info info)
   assert(status == napi_ok);
 
   const CBLDocument *doc = CBLDatabase_GetDocument(database, FLStr(docId), &err);
+
+  napi_value res;
+  if (doc)
+  {
+    assert(napi_create_external(env, (void *)doc, NULL, NULL, &res) == napi_ok);
+  }
+  else
+  {
+    assert(napi_get_null(env, &res) == napi_ok);
+  }
+
+  return res;
+}
+
+// CBLDatabase_GetMutableDocument
+napi_value Database_GetMutableDocument(napi_env env, napi_callback_info info)
+{
+  napi_status status;
+  CBLError err;
+
+  size_t argc = 2;
+  napi_value args[2];
+  status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+  assert(status == napi_ok);
+
+  CBLDatabase *database;
+  status = napi_get_value_external(env, args[0], (void *)&database);
+  assert(status == napi_ok);
+
+  size_t buffer_size = 128;
+  char docId[buffer_size];
+  napi_get_value_string_utf8(env, args[1], docId, buffer_size, NULL);
+  assert(status == napi_ok);
+
+  const CBLDocument *doc = CBLDatabase_GetMutableDocument(database, FLStr(docId), &err);
 
   napi_value res;
   if (doc)
@@ -95,11 +129,6 @@ napi_value Database_DeleteDocument(napi_env env, napi_callback_info info)
 
   return res;
 }
-
-// CBLDatabase_GetMutableDocument
-// CBLDocument *_Nullable Database_GetMutableDocument(napi_env env, napi_callback_info info)
-// {
-// }
 
 // CBLDatabase_SaveDocument
 napi_value Database_SaveDocument(napi_env env, napi_callback_info info)
@@ -181,11 +210,6 @@ napi_value Document_CreateWithID(napi_env env, napi_callback_info info)
 
   return res;
 }
-
-// CBLDocument_MutableProperties
-// napi_value Document_MutableProperties(napi_env env, napi_callback_info info)
-// {
-// }
 
 // CBLDocument_CreateJSON
 napi_value Document_CreateJSON(napi_env env, napi_callback_info info)

@@ -1,5 +1,5 @@
 import { CBL } from './CBL'
-import { Document } from './Document'
+import { Document, MutableDocument } from './Document'
 import { ExternalRef } from './ExternalRef'
 
 type CBLDatabaseRef = ExternalRef<'CBLDatabaseRef'>
@@ -50,6 +50,14 @@ export class Database {
     const ref = CBL.Database_GetDocument(this.ref, id)
 
     return ref ? new Document({ database: this, id, ref, saved: true }) : null
+  }
+
+  getMutableDocument<T extends Record<string, unknown> = Record<string, unknown>>(id: string): MutableDocument<T> | null {
+    if (!this.#ref) throw (new Error('Cannot get a document from a closed database'))
+
+    const ref = CBL.Database_GetMutableDocument(this.ref, id)
+
+    return ref ? new MutableDocument({ database: this, id, ref, saved: true }) : null
   }
 
   saveDocument(document: Document): boolean {
