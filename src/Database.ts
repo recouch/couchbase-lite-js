@@ -37,6 +37,7 @@ export class Database {
     this.#ref = undefined
   }
 
+  // Document change listeners
   addChangeListener(changeHandler: (docIDs: string[]) => void): (() => void) {
     if (!this.#ref) throw (new Error('Cannot listen to changes on a closed database'))
 
@@ -64,6 +65,13 @@ export class Database {
     if (!this.#ref) throw (new Error('Cannot save a document to a closed database'))
 
     return CBL.Database_SaveDocument(this.ref, document.ref, JSON.stringify(document.value))
+  }
+
+  // Document change listeners
+  addDocumentChangeListener(docID: string, changeHandler: () => void) {
+    if (!this.#ref) throw (new Error('Cannot listen to document changes on a closed database'))
+
+    return CBL.Database_AddDocumentChangeListener(this.ref, docID, changeHandler)
   }
 
   static open(name: string): Database {

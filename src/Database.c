@@ -109,9 +109,9 @@ struct ChangedDocs
   unsigned numDocs;
 } changed_docs;
 
-static void ChangeListener(void *func, const CBLDatabase *db, unsigned numDocs, FLString docIDs[])
+static void DatabaseChangeListener(void *func, const CBLDatabase *db, unsigned numDocs, FLString docIDs[])
 {
-  struct ChangedDocs *data = malloc(sizeof(data));
+  struct ChangedDocs *data = malloc(sizeof(numDocs) + sizeof(*docIDs));
   data->docIDs = docIDs;
   data->numDocs = numDocs;
 
@@ -120,7 +120,7 @@ static void ChangeListener(void *func, const CBLDatabase *db, unsigned numDocs, 
   assert(napi_release_threadsafe_function((napi_threadsafe_function)func, napi_tsfn_release) == napi_ok);
 }
 
-static void CallJS(napi_env env, napi_value js_cb, void *context, void *data)
+static void DatabaseChangeListenerCallJS(napi_env env, napi_value js_cb, void *context, void *data)
 {
   napi_value undefined;
   assert(napi_get_undefined(env, &undefined) == napi_ok);
@@ -134,9 +134,9 @@ static void CallJS(napi_env env, napi_value js_cb, void *context, void *data)
 
   for (unsigned int i = 0; i < changedDocsData.numDocs; i++)
   {
-    napi_value docId;
-    assert(napi_create_string_utf8(env, changedDocsData.docIDs[i].buf, changedDocsData.docIDs[i].size, &docId) == napi_ok);
-    assert(napi_set_element(env, docIds, i, docId) == napi_ok);
+    napi_value docID;
+    assert(napi_create_string_utf8(env, changedDocsData.docIDs[i].buf, changedDocsData.docIDs[i].size, &docID) == napi_ok);
+    assert(napi_set_element(env, docIds, i, docID) == napi_ok);
   }
 
   args[0] = docIds;
@@ -153,11 +153,9 @@ Database_AddChangeListener(napi_env env, napi_callback_info info)
   size_t argc = 2;
   napi_value args[2];
   assert(napi_get_cb_info(env, info, &argc, args, NULL, NULL) == napi_ok);
-  ;
 
   CBLDatabase *database;
   assert(napi_get_value_external(env, args[0], (void *)&database) == napi_ok);
-  ;
 
   napi_value async_resource_name;
   assert(napi_create_string_utf8(env,
@@ -166,10 +164,10 @@ Database_AddChangeListener(napi_env env, napi_callback_info info)
                                  &async_resource_name) == napi_ok);
 
   napi_threadsafe_function cb;
-  assert(napi_create_threadsafe_function(env, args[1], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, CallJS, &cb) == napi_ok);
+  assert(napi_create_threadsafe_function(env, args[1], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, DatabaseChangeListenerCallJS, &cb) == napi_ok);
   assert(napi_unref_threadsafe_function(env, cb) == napi_ok);
 
-  CBLListenerToken *token = CBLDatabase_AddChangeListener(database, ChangeListener, cb);
+  CBLListenerToken *token = CBLDatabase_AddChangeListener(database, DatabaseChangeListener, cb);
 
   if (!token)
   {

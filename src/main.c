@@ -19,6 +19,7 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Database_AddChangeListener", Database_AddChangeListener),
 
       // Database document operations
+      DECLARE_NAPI_METHOD("Database_AddDocumentChangeListener", Database_AddDocumentChangeListener),
       DECLARE_NAPI_METHOD("Database_GetDocument", Database_GetDocument),
       DECLARE_NAPI_METHOD("Database_GetMutableDocument", Database_GetMutableDocument),
       DECLARE_NAPI_METHOD("Database_SaveDocument", Database_SaveDocument),

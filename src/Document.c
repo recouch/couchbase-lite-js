@@ -42,11 +42,11 @@ napi_value Database_GetDocument(napi_env env, napi_callback_info info)
   assert(status == napi_ok);
 
   size_t buffer_size = 128;
-  char docId[buffer_size];
-  napi_get_value_string_utf8(env, args[1], docId, buffer_size, NULL);
+  char docID[buffer_size];
+  napi_get_value_string_utf8(env, args[1], docID, buffer_size, NULL);
   assert(status == napi_ok);
 
-  const CBLDocument *doc = CBLDatabase_GetDocument(database, FLStr(docId), &err);
+  const CBLDocument *doc = CBLDatabase_GetDocument(database, FLStr(docID), &err);
 
   napi_value res;
   if (doc)
@@ -77,11 +77,11 @@ napi_value Database_GetMutableDocument(napi_env env, napi_callback_info info)
   assert(status == napi_ok);
 
   size_t buffer_size = 128;
-  char docId[buffer_size];
-  napi_get_value_string_utf8(env, args[1], docId, buffer_size, NULL);
+  char docID[buffer_size];
+  napi_get_value_string_utf8(env, args[1], docID, buffer_size, NULL);
   assert(status == napi_ok);
 
-  const CBLDocument *doc = CBLDatabase_GetMutableDocument(database, FLStr(docId), &err);
+  const CBLDocument *doc = CBLDatabase_GetMutableDocument(database, FLStr(docID), &err);
 
   napi_value res;
   if (doc)
@@ -289,6 +289,63 @@ napi_value Document_Release(napi_env env, napi_callback_info info)
 
   napi_value res;
   napi_get_boolean(env, true, &res);
+
+  return res;
+}
+
+static void DocumentChangeListener(void *func, const CBLDatabase *db, FLString docID)
+{
+  assert(napi_acquire_threadsafe_function((napi_threadsafe_function)func) == napi_ok);
+  assert(napi_call_threadsafe_function((napi_threadsafe_function)func, NULL, napi_tsfn_nonblocking) == napi_ok);
+  assert(napi_release_threadsafe_function((napi_threadsafe_function)func, napi_tsfn_release) == napi_ok);
+}
+
+static void DocumentChangeListenerCallJS(napi_env env, napi_value js_cb, void *context, void *data)
+{
+  napi_value undefined;
+  assert(napi_get_undefined(env, &undefined) == napi_ok);
+
+  napi_value args[0];
+
+  assert(napi_call_function(env, undefined, js_cb, 1, args, NULL) == napi_ok);
+
+  free(data);
+}
+
+// CBLDatabase_AddChangeListener
+napi_value
+Database_AddDocumentChangeListener(napi_env env, napi_callback_info info)
+{
+  size_t argc = 3;
+  napi_value args[3];
+  assert(napi_get_cb_info(env, info, &argc, args, NULL, NULL) == napi_ok);
+
+  CBLDatabase *database;
+  assert(napi_get_value_external(env, args[0], (void *)&database) == napi_ok);
+
+  size_t buffer_size = 128;
+  char docID[buffer_size];
+  assert(napi_get_value_string_utf8(env, args[1], docID, buffer_size, NULL) == napi_ok);
+
+  napi_value async_resource_name;
+  assert(napi_create_string_utf8(env,
+                                 "couchbase-lite database change listener",
+                                 NAPI_AUTO_LENGTH,
+                                 &async_resource_name) == napi_ok);
+
+  napi_threadsafe_function cb;
+  assert(napi_create_threadsafe_function(env, args[2], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, DocumentChangeListenerCallJS, &cb) == napi_ok);
+  assert(napi_unref_threadsafe_function(env, cb) == napi_ok);
+
+  CBLListenerToken *token = CBLDatabase_AddDocumentChangeListener(database, FLStr(docID), DocumentChangeListener, cb);
+
+  if (!token)
+  {
+    napi_throw_error(env, "", "Error adding change listener\n");
+  }
+
+  napi_value res;
+  assert(napi_create_external(env, token, NULL, NULL, &res) == napi_ok);
 
   return res;
 }

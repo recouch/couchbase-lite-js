@@ -76,9 +76,9 @@ describe('Database', () => {
       const fn = jest.fn()
       const token = db.addChangeListener(fn)
 
+      await new Promise(resolve => setTimeout(resolve, 10))
       expect(fn).not.toHaveBeenCalled()
 
-      await new Promise(resolve => setTimeout(resolve, 10))
       doc.save()
 
       await new Promise(resolve => setTimeout(resolve, 10))
@@ -162,6 +162,43 @@ describe('Database', () => {
 
       db.close()
       expect(() => db.getMutableDocument('son')).toThrowError('Cannot get a document from a closed database')
+
+      fs.rmSync(getDbPath(db), { recursive: true })
+    })
+  })
+
+  describe('addDocumentChangeListener', () => {
+    it('calls callback on change', async () => {
+      const db = createTestDatabase({ testDoc: { children: 1 } })
+      const doc = db.getMutableDocument('testDoc')!
+      const fn = jest.fn()
+      const token = db.addDocumentChangeListener('testDoc', fn)
+
+      await new Promise(resolve => setTimeout(resolve, 10))
+      expect(fn).not.toHaveBeenCalled()
+
+      doc.value = { children: 2 }
+      doc.save()
+
+      await new Promise(resolve => setTimeout(resolve, 10))
+      expect(fn).toHaveBeenCalledTimes(1)
+      fn.mockClear()
+
+      const doc2 = MutableDocument.create(db, 'testDoc2')
+      doc2.value = { children: 0 }
+      doc2.save()
+      expect(fn).not.toHaveBeenCalled()
+
+      removeListener(token)
+      doc.release()
+      db.delete()
+    })
+
+    it('does not allow operation on a closed database', () => {
+      const db = createTestDatabase()
+
+      db.close()
+      expect(() => db.addDocumentChangeListener('', jest.fn())).toThrowError('Cannot listen to document changes on a closed database')
 
       fs.rmSync(getDbPath(db), { recursive: true })
     })
