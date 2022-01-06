@@ -12,18 +12,34 @@ napi_value Database_Open(napi_env env, napi_callback_info info)
   CBLError err;
   CBLDatabase *database;
 
-  size_t argc = 1;
-  napi_value args[1];
-  status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-  assert(status == napi_ok);
+  size_t argc = 2;
+  napi_value args[argc];
 
+  assert(napi_get_cb_info(env, info, &argc, args, NULL, NULL) == napi_ok);
   assertType(env, args[0], napi_string, "Wrong arguments: database name must be a string");
 
   size_t buffer_size = 128;
   char dbName[buffer_size];
   napi_get_value_string_utf8(env, args[0], dbName, buffer_size, NULL);
 
-  database = CBLDatabase_Open(FLStr(dbName), NULL, &err);
+  napi_valuetype directoryValueType;
+  assert(napi_typeof(env, args[1], &directoryValueType) == napi_ok);
+
+  if (directoryValueType == napi_string)
+  {
+    size_t buffer_size = 128;
+    char directory[buffer_size];
+    napi_get_value_string_utf8(env, args[1], directory, buffer_size, NULL);
+
+    CBLDatabaseConfiguration config;
+    config.directory = FLStr(directory);
+
+    database = CBLDatabase_Open(FLStr(dbName), &config, &err);
+  }
+  else
+  {
+    database = CBLDatabase_Open(FLStr(dbName), NULL, &err);
+  }
 
   if (!database)
   {

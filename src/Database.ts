@@ -74,8 +74,8 @@ export class Database {
     return CBL.Database_AddDocumentChangeListener(this.ref, docID, changeHandler)
   }
 
-  static open(name: string): Database {
-    const ref = CBL.Database_Open(name)
+  static open(name: string, directory?: string): Database {
+    const ref = CBL.Database_Open(name, directory)
 
     return new Database({ name, ref })
   }

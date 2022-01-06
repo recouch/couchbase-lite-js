@@ -72,7 +72,8 @@ module.exports = {
     'prefer-promise-reject-errors': 'off',
     quotes: ['warn', 'single', { avoidEscape: true }],
     '@typescript-eslint/indent': ['warn', 2],
-    'no-shadow': 2,
+    'no-shadow': 0,
+    'no-unused-vars': 0,
 
     // Correct typescript linting until at least 2.0.0 major release
     // See https://github.com/typescript-eslint/typescript-eslint/issues/501
@@ -81,6 +82,8 @@ module.exports = {
     '@typescript-eslint/ban-ts-ignore': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-shadow': 'error',
+    '@typescript-eslint/no-unused-vars': 'error',
 
     'import/default': 'off',
     'import/export': 2,

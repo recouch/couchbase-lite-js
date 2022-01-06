@@ -1,9 +1,7 @@
 import fs from 'fs'
 import { join } from 'path'
-import { createTestDatabase } from './test-util'
+import { createTestDatabase, getDbPath, testDirectory } from './test-util'
 import { Database, MutableDocument } from '.'
-
-const getDbPath = (db:Database) => join(__dirname, `../${db.name}.cblite2`)
 
 describe('Database', () => {
   describe('open', () => {
@@ -20,9 +18,9 @@ describe('Database', () => {
     it('opens an existing database', () => {
       const dbName = 'existing_db'
 
-      Database.open(dbName).close()
+      Database.open(dbName, testDirectory).close()
 
-      const db = Database.open(dbName)
+      const db = Database.open(dbName, testDirectory)
       expect(db).toBeTruthy()
 
       db.delete()
@@ -31,7 +29,7 @@ describe('Database', () => {
 
   describe('close', () => {
     it('closes the database', () => {
-      const db = Database.open('close_db')
+      const db = createTestDatabase()
       const doc = MutableDocument.create(db)
 
       expect(() => db.close()).not.toThrow()
@@ -43,7 +41,7 @@ describe('Database', () => {
     })
 
     it('does not allow operation on a closed database', () => {
-      const db = Database.open('close_db')
+      const db = createTestDatabase()
 
       db.close()
       expect(() => db.close()).toThrowError('Cannot close a closed database')

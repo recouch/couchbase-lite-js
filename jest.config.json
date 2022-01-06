@@ -1,5 +1,6 @@
 {
   "preset": "ts-jest",
   "collectCoverage": true,
-  "collectCoverageFrom": ["src/**/*.{js,ts}", "!src/**/test-util.ts"]
+  "collectCoverageFrom": ["src/**/*.{js,ts}", "!src/**/test-util.ts"],
+  "globalTeardown": "<rootDir>/jest.globalTeardown.js"
 }
