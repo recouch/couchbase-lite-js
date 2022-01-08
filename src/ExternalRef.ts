@@ -1,3 +1,4 @@
 declare const External: unique symbol
 
-export type ExternalRef<Type extends string> = { readonly [External]: Type }
+export type BasicValue = Record<string, unknown>
+export type ExternalRef<Type extends string, T extends BasicValue = BasicValue> = { readonly [External]: Type, readonly value: T }

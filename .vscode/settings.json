@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "typeinfo": "c",
-    "listener.h": "c"
+    "listener.h": "c",
+    "__functional_base": "c"
   }
 }

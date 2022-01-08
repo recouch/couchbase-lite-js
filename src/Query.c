@@ -2,6 +2,7 @@
 #include <node_api.h>
 #include <stdio.h>
 #include "cbl/CouchbaseLite.h"
+#include "Listener.h"
 
 #define CHECK(expr)                                                                 \
   {                                                                                 \
@@ -44,22 +45,8 @@ napi_value Database_CreateQuery(napi_env env, napi_callback_info info)
   return res;
 }
 
-// CBLQuery_Execute
-napi_value Query_Execute(napi_env env, napi_callback_info info)
+FLStringResult ResultSet_ToJSON(CBLResultSet *results)
 {
-  size_t argc = 3;
-  napi_value args[argc]; // [database, language, query]
-
-  CBLError err;
-  CBLQuery *query;
-
-  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
-  CHECK(napi_get_value_external(env, args[0], (void *)&query));
-
-  napi_value res;
-  CHECK(napi_create_array(env, &res));
-
-  CBLResultSet *results = CBLQuery_Execute(query, &err);
   FLMutableArray resultsArray = FLMutableArray_New();
 
   while (CBLResultSet_Next(results))
@@ -68,14 +55,31 @@ napi_value Query_Execute(napi_env env, napi_callback_info info)
     FLMutableArray_AppendDict(resultsArray, result);
   }
 
-  CBLResultSet_Release(results);
+  FLStringResult json = FLValue_ToJSON((FLValue)resultsArray);
 
-  FLStringResult jsonRes = FLValue_ToJSON((FLValue)resultsArray);
-
-  CHECK(napi_create_string_utf8(env, jsonRes.buf, jsonRes.size, &res));
-
-  FLSliceResult_Release(jsonRes);
   FLMutableArray_Release(resultsArray);
+
+  return json;
+}
+
+// CBLQuery_Execute
+napi_value Query_Execute(napi_env env, napi_callback_info info)
+{
+  size_t argc = 1;
+  napi_value args[argc]; // [database, language, query]
+
+  CBLError err;
+  CBLQuery *query;
+
+  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+  CHECK(napi_get_value_external(env, args[0], (void *)&query));
+
+  CBLResultSet *results = CBLQuery_Execute(query, &err);
+  FLStringResult json = ResultSet_ToJSON(results);
+  CBLResultSet_Release(results);
+  napi_value res;
+  CHECK(napi_create_string_utf8(env, json.buf, json.size, &res));
+  FLSliceResult_Release(json);
 
   return res;
 }
@@ -83,7 +87,7 @@ napi_value Query_Execute(napi_env env, napi_callback_info info)
 // CBLQuery_Explain
 napi_value Query_Explain(napi_env env, napi_callback_info info)
 {
-  size_t argc = 3;
+  size_t argc = 1;
   napi_value args[argc]; // [database, language, query]
 
   CBLQuery *query;
@@ -114,19 +118,70 @@ napi_value Query_SetParameters(napi_env env, napi_callback_info info)
   return res;
 }
 
-// Change listeners
+static void QueryChangeListener(void *cb, CBLQuery *query, CBLListenerToken *token)
+{
+  CBLError err;
+  CBLResultSet *results = CBLQuery_CopyCurrentResults(query, token, &err);
+  FLStringResult json = ResultSet_ToJSON(results);
+  char *data;
+  data = malloc(json.size + 1);
+  assert(FLSlice_ToCString(FLSliceResult_AsSlice(json), data, json.size + 1) == true);
+
+  FLSliceResult_Release(json);
+  CBLResultSet_Release(results);
+
+  CHECK(napi_acquire_threadsafe_function((napi_threadsafe_function)cb));
+  CHECK(napi_call_threadsafe_function((napi_threadsafe_function)cb, data, napi_tsfn_nonblocking));
+  CHECK(napi_release_threadsafe_function((napi_threadsafe_function)cb, napi_tsfn_release));
+}
+
+static void QueryChangeListenerCallJS(napi_env env, napi_value js_cb, void *context, void *data)
+{
+  napi_value undefined;
+  CHECK(napi_get_undefined(env, &undefined));
+  char *json = (char *)data;
+
+  napi_value args[1];
+  napi_value jsonString;
+  CHECK(napi_create_string_utf8(env, json, NAPI_AUTO_LENGTH, &jsonString));
+  args[0] = jsonString;
+
+  CHECK(napi_call_function(env, undefined, js_cb, 1, args, NULL));
+
+  free(data);
+}
+
 // CBLQuery_AddChangeListener
 napi_value Query_AddChangeListener(napi_env env, napi_callback_info info)
 {
-  napi_value res;
-  CHECK(napi_get_undefined(env, &res));
-  return res;
-}
+  size_t argc = 2;
+  napi_value args[argc]; // [database, language, query]
 
-// CBLQuery_CopyCurrentResults
-napi_value Query_CopyCurrentResults(napi_env env, napi_callback_info info)
-{
-  napi_value res;
-  CHECK(napi_get_undefined(env, &res));
-  return res;
+  CBLQuery *query;
+
+  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+  CHECK(napi_get_value_external(env, args[0], (void *)&query));
+
+  napi_value async_resource_name;
+  assert(napi_create_string_utf8(env,
+                                 "couchbase-lite query change listener",
+                                 NAPI_AUTO_LENGTH,
+                                 &async_resource_name) == napi_ok);
+  napi_threadsafe_function listenerCallback;
+  CHECK(napi_create_threadsafe_function(env, args[1], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, QueryChangeListenerCallJS, &listenerCallback));
+  CHECK(napi_unref_threadsafe_function(env, listenerCallback));
+
+  CBLListenerToken *token = CBLQuery_AddChangeListener(query, QueryChangeListener, listenerCallback);
+
+  if (!token)
+  {
+    napi_throw_error(env, "", "Error adding change listener\n");
+    CHECK(napi_release_threadsafe_function(listenerCallback, napi_tsfn_abort));
+  }
+
+  struct StopListenerData *stopListenerData = newStopListenerData(listenerCallback, token);
+  napi_value stopListener;
+  assert(napi_create_function(env, "stopDatabaseChangeListener", NAPI_AUTO_LENGTH, StopChangeListener, stopListenerData, &stopListener) == napi_ok);
+
+  return stopListener;
 }

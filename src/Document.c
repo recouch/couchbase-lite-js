@@ -294,11 +294,11 @@ napi_value Document_Release(napi_env env, napi_callback_info info)
   return res;
 }
 
-static void DocumentChangeListener(void *func, const CBLDatabase *db, FLString docID)
+static void DocumentChangeListener(void *cb, const CBLDatabase *db, FLString docID)
 {
-  assert(napi_acquire_threadsafe_function((napi_threadsafe_function)func) == napi_ok);
-  assert(napi_call_threadsafe_function((napi_threadsafe_function)func, NULL, napi_tsfn_nonblocking) == napi_ok);
-  assert(napi_release_threadsafe_function((napi_threadsafe_function)func, napi_tsfn_release) == napi_ok);
+  assert(napi_acquire_threadsafe_function((napi_threadsafe_function)cb) == napi_ok);
+  assert(napi_call_threadsafe_function((napi_threadsafe_function)cb, NULL, napi_tsfn_nonblocking) == napi_ok);
+  assert(napi_release_threadsafe_function((napi_threadsafe_function)cb, napi_tsfn_release) == napi_ok);
 }
 
 static void DocumentChangeListenerCallJS(napi_env env, napi_value js_cb, void *context, void *data)
@@ -306,9 +306,7 @@ static void DocumentChangeListenerCallJS(napi_env env, napi_value js_cb, void *c
   napi_value undefined;
   assert(napi_get_undefined(env, &undefined) == napi_ok);
 
-  napi_value args[0];
-
-  assert(napi_call_function(env, undefined, js_cb, 1, args, NULL) == napi_ok);
+  assert(napi_call_function(env, undefined, js_cb, 0, NULL, NULL) == napi_ok);
 
   free(data);
 }
@@ -329,7 +327,7 @@ napi_value Database_AddDocumentChangeListener(napi_env env, napi_callback_info i
 
   napi_value async_resource_name;
   assert(napi_create_string_utf8(env,
-                                 "couchbase-lite database change listener",
+                                 "couchbase-lite document change listener",
                                  NAPI_AUTO_LENGTH,
                                  &async_resource_name) == napi_ok);
 

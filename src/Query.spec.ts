@@ -1,3 +1,4 @@
+import { MutableDocument } from './Document'
 import { Query } from './Query'
 import { createTestDatabase } from './test-util'
 
@@ -52,6 +53,17 @@ describe('Query', () => {
       query.release()
       db.delete()
     })
+
+    it('does not allow operation on a released query', () => {
+      const db = createTestDatabase()
+      const query = Query.create(db, 'SELECT * FROM _')
+
+      query.release()
+
+      expect(() => query.execute()).toThrowError('Cannot execute a released query')
+
+      db.delete()
+    })
   })
 
   describe('explain', () => {
@@ -66,6 +78,96 @@ describe('Query', () => {
 
       query.release()
       db.delete()
+    })
+
+    it('does not allow operation on a released query', () => {
+      const db = createTestDatabase()
+      const query = Query.create(db, 'SELECT * FROM _')
+
+      query.release()
+
+      expect(() => query.explain()).toThrowError('Cannot explain a released query')
+
+      db.delete()
+    })
+  })
+
+  describe('addChangeListener', () => {
+    it('listens to changes on a query', async () => {
+      const timeout = () => new Promise(resolve => setTimeout(resolve, 300))
+      const db = createTestDatabase({ doc1: { type: 'parent', name: 'Mom' }, doc2: { type: 'child', name: 'Milo' } })
+      const query = Query.create(db, 'SELECT _id, * FROM _ AS value WHERE type == "child"')
+      const cb = jest.fn()
+      const stop = query.addChangeListener(cb)
+
+      await timeout()
+      expect(cb).toHaveBeenCalledTimes(1)
+      expect(cb).toHaveBeenCalledWith([{ id: 'doc2', value: { type: 'child', name: 'Milo' } }])
+
+      cb.mockClear()
+
+      const doc3 = MutableDocument.create(db, 'doc3')
+      doc3.value = { type: 'parent', name: 'Dad' }
+      doc3.save()
+      await timeout()
+      expect(cb).not.toHaveBeenCalled()
+
+      const doc4 = MutableDocument.create(db, 'doc4')
+      doc4.value = { type: 'child', name: 'Fiona' }
+      doc4.save()
+      await timeout()
+      expect(cb).toHaveBeenCalledTimes(1)
+      expect(cb).toHaveBeenCalledWith([{ id: 'doc2', value: { type: 'child', name: 'Milo' } }, { id: 'doc4', value: { type: 'child', name: 'Fiona' } }])
+
+      cb.mockClear()
+
+      doc4.value = { type: 'nephew', name: 'Becky' }
+      doc4.save()
+      await timeout()
+      expect(cb).toHaveBeenCalledTimes(1)
+      expect(cb).toHaveBeenCalledWith([{ id: 'doc2', value: { type: 'child', name: 'Milo' } }])
+
+      stop()
+      query.release()
+      db.delete()
+    })
+
+    it('does not allow operation on a released query', () => {
+      const db = createTestDatabase()
+      const query = Query.create(db, 'SELECT * FROM _')
+      const cb = jest.fn()
+
+      query.release()
+
+      expect(() => query.addChangeListener(cb)).toThrowError('Cannot listen to changes on a released query')
+
+      db.delete()
+    })
+
+    describe('stop', () => {
+      it('stops listens to changes on a query', async () => {
+        const timeout = () => new Promise(resolve => setTimeout(resolve, 300))
+        const db = createTestDatabase({ doc1: { type: 'parent', name: 'Mom' }, doc2: { type: 'child', name: 'Milo' } })
+        const query = Query.create(db, 'SELECT _id, * FROM _ AS value WHERE type == "child"')
+        const cb = jest.fn()
+        const stop = query.addChangeListener(cb)
+
+        await timeout()
+        expect(cb).toHaveBeenCalledTimes(1)
+        expect(cb).toHaveBeenCalledWith([{ id: 'doc2', value: { type: 'child', name: 'Milo' } }])
+
+        cb.mockClear()
+        stop()
+
+        const doc3 = MutableDocument.create(db, 'doc3')
+        doc3.value = { type: 'child', name: 'Fiona' }
+        doc3.save()
+        await timeout()
+        expect(cb).not.toHaveBeenCalled()
+
+        query.release()
+        db.delete()
+      }, 3000)
     })
   })
 

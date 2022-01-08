@@ -1,6 +1,5 @@
 #include "Database.c"
 #include "Document.c"
-#include "Listener.h"
 #include "Query.c"
 
 #define DECLARE_NAPI_METHOD(name, func)     \
@@ -34,11 +33,9 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Document_Release", Document_Release),
       DECLARE_NAPI_METHOD("Document_SetJSON", Document_SetJSON),
 
-      // Listener operations
-      DECLARE_NAPI_METHOD("Listener_Remove", Listener_Remove),
-
       // Queries
       DECLARE_NAPI_METHOD("Database_CreateQuery", Database_CreateQuery),
+      DECLARE_NAPI_METHOD("Query_AddChangeListener", Query_AddChangeListener),
       DECLARE_NAPI_METHOD("Query_Execute", Query_Execute),
       DECLARE_NAPI_METHOD("Query_Explain", Query_Explain)};
 
