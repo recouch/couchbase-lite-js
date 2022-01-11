@@ -1,5 +1,5 @@
 import { createTestDatabase } from './test-util'
-import { MutableDocument } from '.'
+import { MutableDocument } from './Document'
 
 describe('Document', () => {
   describe('get value', () => {
@@ -12,17 +12,15 @@ describe('Document', () => {
       // TODO: Find some way to ensure Document_CreateJSON is only called once
       expect(doc.value).toEqual({ couch: 'potato' })
 
-      doc.release()
       db.delete()
     })
 
-    it('does not allow getting data from a released document', () => {
+    it('does not allow getting data from a deleted document', () => {
       const db = createTestDatabase({ 'test-1': {} })
       const doc = db.getDocument('test-1')!
 
-      doc.release()
-
-      expect(() => doc.value).toThrowError('Cannot get value of a released document')
+      doc.delete()
+      expect(() => doc.value).toThrowError('Cannot get value of a deleted document')
       db.delete()
     })
   })
@@ -35,7 +33,6 @@ describe('Document', () => {
       // @ts-ignore
       expect(() => { doc.value = { testing: true } }).toThrow()
 
-      doc.release()
       db.delete()
     })
   })
@@ -44,8 +41,6 @@ describe('Document', () => {
     it('does not allow saving a non-mutable document', () => {
       const db = createTestDatabase({ 'test-1': {} })
       const doc = db.getDocument('test-1')!
-
-      doc.release()
 
       // @ts-ignore
       expect(() => doc.save()).toThrow()
@@ -67,26 +62,12 @@ describe('Document', () => {
       db.delete()
     })
 
-    it('does not allow deleting a released document', () => {
+    it('does not allow deleting a deleted document', () => {
       const db = createTestDatabase({ 'test-1': {} })
       const doc = db.getDocument('test-1')!
 
-      doc.release()
-
-      expect(() => doc.delete()).toThrowError('Cannot delete a released document')
-
-      db.delete()
-    })
-  })
-
-  describe('release', () => {
-    it('does not allow releasing a document that is already released', () => {
-      const db = createTestDatabase({ 'test-1': {} })
-      const doc = db.getDocument('test-1')!
-
-      doc.release()
-
-      expect(() => doc.release()).toThrowError('Cannot release a released document')
+      doc.delete()
+      expect(() => doc.delete()).toThrowError('Cannot delete a deleted document')
 
       db.delete()
     })
@@ -102,7 +83,6 @@ describe('MutableDocument', () => {
       expect(doc.value).toEqual({})
       expect(doc.id).toMatch(/^~/)
 
-      doc.release()
       db.delete()
     })
 
@@ -113,31 +93,30 @@ describe('MutableDocument', () => {
       expect(doc.value).toEqual({})
       expect(doc.id).toBe('custom-id')
 
-      doc.release()
       db.delete()
     })
   })
 
   describe('get id', () => {
-    it('does not allow getting the id of a released document', () => {
+    it('does not allow getting the id of a deleted document', () => {
       const db = createTestDatabase()
       const doc = MutableDocument.create(db)
 
-      doc.release()
-
-      expect(() => doc.id).toThrowError('Cannot get ID of a released document')
+      doc.save()
+      doc.delete()
+      expect(() => doc.id).toThrowError('Cannot get ID of a deleted document')
       db.delete()
     })
   })
 
   describe('get value', () => {
-    it('does not allow getting data from a released document', () => {
+    it('does not allow getting data from a deleted document', () => {
       const db = createTestDatabase()
       const doc = MutableDocument.create(db)
 
-      doc.release()
-
-      expect(() => doc.value).toThrowError('Cannot get value of a released document')
+      doc.save()
+      doc.delete()
+      expect(() => doc.value).toThrowError('Cannot get value of a deleted document')
       db.delete()
     })
   })
@@ -151,17 +130,16 @@ describe('MutableDocument', () => {
 
       expect(doc.value).toEqual({ testing: true })
 
-      doc.release()
       db.delete()
     })
 
-    it('does not allow setting data on a released document', () => {
+    it('does not allow setting data on a deleted document', () => {
       const db = createTestDatabase()
       const doc = MutableDocument.create(db)
 
-      doc.release()
-
-      expect(() => { doc.value = { testing: true } }).toThrowError('Cannot set value of a released document')
+      doc.save()
+      doc.delete()
+      expect(() => { doc.value = { testing: true } }).toThrowError('Cannot set value of a deleted document')
       db.delete()
     })
   })
@@ -175,22 +153,20 @@ describe('MutableDocument', () => {
       expect(doc.saved).toBe(false)
       doc.save()
       expect(doc.saved).toBe(true)
-      doc.release()
 
       const doc2 = db.getMutableDocument('saved_doc')!
       expect(doc2.value).toEqual({ testing: true })
-      doc2.release()
 
       db.delete()
     })
 
-    it('does not allow saving a released document', () => {
+    it('does not allow saving a deleted document', () => {
       const db = createTestDatabase()
       const doc = MutableDocument.create(db)
 
-      doc.release()
-
-      expect(() => doc.save()).toThrowError('Cannot save a released document')
+      doc.save()
+      doc.delete()
+      expect(() => doc.save()).toThrowError('Cannot save a deleted document')
 
       db.delete()
     })
@@ -218,30 +194,15 @@ describe('MutableDocument', () => {
 
       expect(() => doc.delete()).toThrowError('Cannot delete an unsaved document')
 
-      doc.release()
       db.delete()
     })
 
-    it('does not allow deleting a released document', () => {
+    it('does not allow deleting a deleted document', () => {
       const db = createTestDatabase({ 'test-1': {} })
       const doc = db.getDocument('test-1')!
 
-      doc.release()
-
-      expect(() => doc.delete()).toThrowError('Cannot delete a released document')
-
-      db.delete()
-    })
-  })
-
-  describe('release', () => {
-    it('does not allow releasing a document that is already released', () => {
-      const db = createTestDatabase()
-      const doc = MutableDocument.create(db)
-
-      doc.release()
-
-      expect(() => doc.release()).toThrowError('Cannot release a released document')
+      doc.delete()
+      expect(() => doc.delete()).toThrowError('Cannot delete a deleted document')
 
       db.delete()
     })

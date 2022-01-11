@@ -1,7 +1,8 @@
 import fs from 'fs'
 import { join } from 'path'
 import { createTestDatabase, getDbPath, testDirectory } from './test-util'
-import { Database, MutableDocument } from '.'
+import { Database } from './Database'
+import { MutableDocument } from './Document'
 
 describe('Database', () => {
   describe('open', () => {
@@ -9,7 +10,7 @@ describe('Database', () => {
       const db = Database.open('new_db')
 
       expect(db).toBeTruthy()
-      const dbPath = join(__dirname, `../${db.name}.cblite2`)
+      const dbPath = join(__dirname, `../../${db.name}.cblite2`)
       expect(fs.statSync(dbPath).isDirectory()).toBe(true)
 
       db.delete()
@@ -34,8 +35,6 @@ describe('Database', () => {
 
       expect(() => db.close()).not.toThrow()
       expect(() => doc.save()).toThrowError('Cannot save a document to a closed database')
-
-      doc.release()
 
       fs.rmSync(getDbPath(db), { recursive: true })
     })
@@ -85,7 +84,6 @@ describe('Database', () => {
 
       expect(stop()).toBe(true)
 
-      doc.release()
       db.delete()
     })
 
@@ -100,13 +98,12 @@ describe('Database', () => {
   })
 
   describe('getDocument', () => {
-    it('calls callback on change', () => {
+    it('gets a document by ID from the DB', () => {
       const db = createTestDatabase()
       const newDoc = MutableDocument.create(db, 'boy')
 
       newDoc.value = { name: 'Milo' }
       newDoc.save()
-      newDoc.release()
 
       const retrievedDoc = db.getDocument<{ name: string }>('boy')
       expect(retrievedDoc?.value.name).toBe('Milo')
@@ -140,7 +137,6 @@ describe('Database', () => {
 
       newDoc.value = { name: 'Milo' }
       newDoc.save()
-      newDoc.release()
 
       const retrievedDoc = db.getMutableDocument<{ name: string }>('boy')
       expect(retrievedDoc?.value.name).toBe('Milo')
@@ -184,6 +180,7 @@ describe('Database', () => {
 
       await new Promise(resolve => setTimeout(resolve, 10))
       expect(fn).toHaveBeenCalledTimes(1)
+      expect(fn).toHaveBeenCalledWith('testDoc')
       fn.mockClear()
 
       const doc2 = MutableDocument.create(db, 'testDoc2')
@@ -193,7 +190,6 @@ describe('Database', () => {
 
       expect(stop()).toBe(true)
 
-      doc.release()
       db.delete()
     })
 

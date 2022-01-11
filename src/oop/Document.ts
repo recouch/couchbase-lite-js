@@ -1,4 +1,4 @@
-import { CBL } from './CBL'
+import { CBL } from '../CBL'
 import type { Database } from './Database'
 import { ExternalRef } from './ExternalRef'
 
@@ -44,35 +44,24 @@ export class Document<T extends Record<string, unknown> = Record<string, unknown
   }
 
   #getID(): string {
-    if (!this.ref) throw new Error('Cannot get ID of a released document')
+    if (!this.ref) throw new Error('Cannot get ID of a deleted document')
 
     return CBL.Document_ID(this.ref)
   }
 
   #getValue(): T {
-    if (!this.ref) throw new Error('Cannot get value of a released document')
+    if (!this.ref) throw new Error('Cannot get value of a deleted document')
 
     return JSON.parse(CBL.Document_CreateJSON(this.ref))
   }
 
   delete() {
-    if (!this.ref) throw new Error('Cannot delete a released document')
+    if (!this.ref) throw new Error('Cannot delete a deleted document')
 
     const res = CBL.Database_DeleteDocument(this.database.ref, this.ref)
     this.#ref = undefined
 
     return res
-  }
-
-  /**
-   * Releases the document from memory
-   * The document cannot be mutated or saved after calling this
-   */
-  release() {
-    if (!this.ref) throw new Error('Cannot release a released document')
-
-    CBL.Document_Release(this.ref)
-    this.#ref = undefined
   }
 }
 
@@ -101,19 +90,19 @@ export class MutableDocument<T extends Record<string, unknown> = Record<string, 
   }
 
   #getValue(): T {
-    if (!this.ref) throw new Error('Cannot get value of a released document')
+    if (!this.ref) throw new Error('Cannot get value of a deleted document')
 
     return JSON.parse(CBL.Document_CreateJSON(this.ref))
   }
 
   #setValue(value: T) {
-    if (!this.ref) throw new Error('Cannot set value of a released document')
+    if (!this.ref) throw new Error('Cannot set value of a deleted document')
 
     return CBL.Document_SetJSON(this.ref, JSON.stringify(value))
   }
 
   save() {
-    if (!this.ref) throw new Error('Cannot save a released document')
+    if (!this.ref) throw new Error('Cannot save a deleted document')
 
     this.database.saveDocument(this)
     this.#saved = true

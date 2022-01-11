@@ -2,6 +2,17 @@
   "files.associations": {
     "typeinfo": "c",
     "listener.h": "c",
-    "__functional_base": "c"
+    "__functional_base": "c",
+    "__config": "c",
+    "__functional_03": "c",
+    "__hash_table": "c",
+    "__mutex_base": "c",
+    "algorithm": "c",
+    "atomic": "c",
+    "functional": "c",
+    "locale": "c",
+    "memory": "c",
+    "mutex": "c",
+    "unordered_map": "c"
   }
 }

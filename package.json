@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "node-gyp build && tsc",
+    "build": "node-gyp build && tsc -p tsconfig.lib.json",
     "fetch-source": "node ./fetch-source",
     "rebuild": "node-gyp rebuild",
     "test": "jest",

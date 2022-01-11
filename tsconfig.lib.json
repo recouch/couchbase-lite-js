@@ -20,5 +20,6 @@
     "target": "es2016",
     "types": ["jest"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
 }

@@ -1,4 +1,4 @@
-import { CBL } from './CBL'
+import { CBL } from '../CBL'
 import { Document, MutableDocument } from './Document'
 import { ExternalRef } from './ExternalRef'
 
@@ -64,11 +64,11 @@ export class Database {
   saveDocument(document: Document): boolean {
     if (!this.#ref) throw (new Error('Cannot save a document to a closed database'))
 
-    return CBL.Database_SaveDocument(this.ref, document.ref, JSON.stringify(document.value))
+    return CBL.Database_SaveDocument(this.ref, document.ref)
   }
 
   // Document change listeners
-  addDocumentChangeListener(docID: string, changeHandler: () => void) {
+  addDocumentChangeListener(docID: string, changeHandler: (docId: string) => void) {
     if (!this.#ref) throw (new Error('Cannot listen to document changes on a closed database'))
 
     return CBL.Database_AddDocumentChangeListener(this.ref, docID, changeHandler)

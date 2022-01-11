@@ -10,7 +10,6 @@ describe('Query', () => {
 
       expect(query).toBeInstanceOf(Query)
 
-      query.release()
       db.delete()
     })
 
@@ -20,7 +19,6 @@ describe('Query', () => {
 
       expect(query).toBeInstanceOf(Query)
 
-      query.release()
       db.delete()
     })
   })
@@ -36,7 +34,6 @@ describe('Query', () => {
       expect(results).toContainEqual({ id: 'doc1', value: { name: 'Fiona' } })
       expect(results).toContainEqual({ id: 'doc2', value: { name: 'Milo' } })
 
-      query.release()
       db.delete()
     })
 
@@ -49,18 +46,6 @@ describe('Query', () => {
       expect(results).toHaveLength(2)
       expect(results).toContainEqual({ id: 'doc1', value: { name: 'Fiona' } })
       expect(results).toContainEqual({ id: 'doc2', value: { name: 'Milo' } })
-
-      query.release()
-      db.delete()
-    })
-
-    it('does not allow operation on a released query', () => {
-      const db = createTestDatabase()
-      const query = Query.create(db, 'SELECT * FROM _')
-
-      query.release()
-
-      expect(() => query.execute()).toThrowError('Cannot execute a released query')
 
       db.delete()
     })
@@ -75,18 +60,6 @@ describe('Query', () => {
 
       expect(typeof explanation).toBe('string')
       expect(explanation).toContain('AS value')
-
-      query.release()
-      db.delete()
-    })
-
-    it('does not allow operation on a released query', () => {
-      const db = createTestDatabase()
-      const query = Query.create(db, 'SELECT * FROM _')
-
-      query.release()
-
-      expect(() => query.explain()).toThrowError('Cannot explain a released query')
 
       db.delete()
     })
@@ -128,19 +101,6 @@ describe('Query', () => {
       expect(cb).toHaveBeenCalledWith([{ id: 'doc2', value: { type: 'child', name: 'Milo' } }])
 
       stop()
-      query.release()
-      db.delete()
-    })
-
-    it('does not allow operation on a released query', () => {
-      const db = createTestDatabase()
-      const query = Query.create(db, 'SELECT * FROM _')
-      const cb = jest.fn()
-
-      query.release()
-
-      expect(() => query.addChangeListener(cb)).toThrowError('Cannot listen to changes on a released query')
-
       db.delete()
     })
 
@@ -165,22 +125,8 @@ describe('Query', () => {
         await timeout()
         expect(cb).not.toHaveBeenCalled()
 
-        query.release()
         db.delete()
       }, 3000)
-    })
-  })
-
-  describe('release', () => {
-    it('does not allow releasing a query that is already released', () => {
-      const db = createTestDatabase()
-      const query = Query.create(db, 'SELECT * FROM _')
-
-      query.release()
-
-      expect(() => query.release()).toThrowError('Cannot release a released query')
-
-      db.delete()
     })
   })
 })

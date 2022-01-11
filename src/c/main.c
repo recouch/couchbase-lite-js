@@ -12,8 +12,12 @@ NAPI_MODULE_INIT(/* env, exports */)
   napi_property_descriptor desc[] = {
       // Database lifecycle
       DECLARE_NAPI_METHOD("Database_Close", Database_Close),
-      DECLARE_NAPI_METHOD("Database_Open", Database_Open),
       DECLARE_NAPI_METHOD("Database_Delete", Database_Delete),
+      DECLARE_NAPI_METHOD("Database_EndTransaction", Database_EndTransaction),
+      DECLARE_NAPI_METHOD("Database_Open", Database_Open),
+      DECLARE_NAPI_METHOD("Database_Name", Database_Name),
+      DECLARE_NAPI_METHOD("Database_Path", Database_Path),
+      DECLARE_NAPI_METHOD("DeleteDatabase", DeleteDatabase),
 
       // Database change listeners
       DECLARE_NAPI_METHOD("Database_AddChangeListener", Database_AddChangeListener),
@@ -30,7 +34,6 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Document_CreateWithID", Document_CreateWithID),
       DECLARE_NAPI_METHOD("Document_CreateJSON", Document_CreateJSON),
       DECLARE_NAPI_METHOD("Document_ID", Document_ID),
-      DECLARE_NAPI_METHOD("Document_Release", Document_Release),
       DECLARE_NAPI_METHOD("Document_SetJSON", Document_SetJSON),
 
       // Queries

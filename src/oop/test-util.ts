@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid'
 import { Database } from './Database'
 import { MutableDocument } from './Document'
 
-export const testDirectory = join(__dirname, '../test-output')
+export const testDirectory = join(__dirname, '../../test-output')
 
 export function createTestDatabase(initDocs: { [id: string]: Record<string, unknown> } = {}) {
   if (!fs.existsSync(testDirectory)) fs.mkdirSync(testDirectory)
@@ -17,10 +17,9 @@ export function createTestDatabase(initDocs: { [id: string]: Record<string, unkn
 
     doc.value = data
     doc.save()
-    doc.release()
   })
 
   return db
 }
 
-export const getDbPath = (db:Database) => join(testDirectory, `${db.name}.cblite2`)
+export const getDbPath = (db: Database) => join(testDirectory, `${db.name}.cblite2`)

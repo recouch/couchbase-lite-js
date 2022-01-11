@@ -16,8 +16,9 @@
                 "lib/libcblite-3.0.0/include",
             ],
             "sources": [
-                "src/Listener.c",
-                "src/main.c",
+                "src/c/Listener.c",
+                "src/c/util.c",
+                "src/c/main.c",
             ],
 
             "libraries": [
