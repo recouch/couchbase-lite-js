@@ -11,6 +11,7 @@ NAPI_MODULE_INIT(/* env, exports */)
 {
   napi_property_descriptor desc[] = {
       // Database lifecycle
+      DECLARE_NAPI_METHOD("Database_BeginTransaction", Database_BeginTransaction),
       DECLARE_NAPI_METHOD("Database_Close", Database_Close),
       DECLARE_NAPI_METHOD("Database_Delete", Database_Delete),
       DECLARE_NAPI_METHOD("Database_EndTransaction", Database_EndTransaction),
