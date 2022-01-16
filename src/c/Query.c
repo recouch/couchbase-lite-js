@@ -115,16 +115,51 @@ napi_value Query_Explain(napi_env env, napi_callback_info info)
 // CBLQuery_Parameters
 napi_value Query_Parameters(napi_env env, napi_callback_info info)
 {
+  size_t argc = 1;
+  napi_value args[argc]; // [database, language, query]
+
+  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+
+  external_query_ref *queryRef;
+  CHECK(napi_get_value_external(env, args[0], (void *)&queryRef));
+  CBLQuery *query = queryRef->query;
+
   napi_value res;
-  CHECK(napi_get_undefined(env, &res));
+  FLDict parameters = CBLQuery_Parameters(query);
+  FLSliceResult json = FLValue_ToJSON((FLValue)parameters);
+  CHECK(napi_create_string_utf8(env, json.buf, json.size, &res));
+
   return res;
 }
 
 // CBLQuery_SetParameters
 napi_value Query_SetParameters(napi_env env, napi_callback_info info)
 {
+  size_t argc = 2;
+  napi_value args[argc]; // [database, language, query]
+
+  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+
+  external_query_ref *queryRef;
+  CHECK(napi_get_value_external(env, args[0], (void *)&queryRef));
+  CBLQuery *query = queryRef->query;
+
+  size_t str_size;
+  napi_get_value_string_utf8(env, args[1], NULL, 0, &str_size);
+  char *json;
+  json = (char *)calloc(str_size + 1, sizeof(char));
+  str_size = str_size + 1;
+  napi_get_value_string_utf8(env, args[1], json, str_size, NULL);
+
+  FLError err;
+  FLDoc parametersDoc = FLDoc_FromJSON(FLStr(json), &err);
+  FLDict parameters = FLValue_AsDict(FLDoc_GetRoot(parametersDoc));
+
+  CBLQuery_SetParameters(query, parameters);
+
   napi_value res;
-  CHECK(napi_get_undefined(env, &res));
+  CHECK(napi_get_boolean(env, true, &res));
+
   return res;
 }
 

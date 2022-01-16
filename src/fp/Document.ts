@@ -24,7 +24,7 @@ export function createDocument<T = unknown>(id?: string): CBLMutableDocumentRef<
   return id ? CBL.Document_CreateWithID(id) : CBL.Document_Create()
 }
 
-export function deleteDocument<T>(db: CBLDatabaseRef, doc: CBLMutableDocumentRef<T>): boolean {
+export function deleteDocument(db: CBLDatabaseRef, doc: CBLDocumentRef | CBLMutableDocumentRef): boolean {
   return CBL.Database_DeleteDocument(db, doc)
 }
 
@@ -44,7 +44,7 @@ export function getMutableDocument<T = unknown>(db: CBLDatabaseRef, id: string):
   return CBL.Database_GetMutableDocument(db, id)
 }
 
-export function saveDocument<T>(db: CBLDatabaseRef, doc: CBLMutableDocumentRef<T>): boolean {
+export function saveDocument(db: CBLDatabaseRef, doc: CBLMutableDocumentRef): boolean {
   return CBL.Database_SaveDocument(db, doc)
 }
 
