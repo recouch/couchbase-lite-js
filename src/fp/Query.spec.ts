@@ -1,5 +1,5 @@
 import { createDocument, saveDocument, setDocumentProperties } from './Document'
-import { addQueryChangeListener, createQuery, executeQuery, explainQuery } from './Query'
+import { addQueryChangeListener, createQuery, executeQuery, explainQuery, getQueryParameters, setQueryParameters } from './Query'
 import { createTestDatabase, timeout } from './test-util'
 
 describe('query functions', () => {
@@ -10,7 +10,7 @@ describe('query functions', () => {
       const cb = jest.fn()
       const stop = addQueryChangeListener(query, cb)
 
-      await timeout()
+      await timeout(500)
       expect(cb).toHaveBeenCalledTimes(1)
       expect(cb).toHaveBeenCalledWith([{ id: 'doc2', value: { type: 'child', name: 'Milo' } }])
 
@@ -122,6 +122,45 @@ describe('query functions', () => {
       const explanation = explainQuery(query)
       expect(typeof explanation).toBe('string')
       expect(explanation).toContain('AS value')
+
+      cleanup()
+    })
+  })
+
+  describe('getQueryParameters', () => {
+    it('sets the parameters of a query', () => {
+      const { cleanup, db } = createTestDatabase()
+      const query = createQuery<{ id: string }>(db, 'SELECT _id FROM _ WHERE name = $name')
+
+      setQueryParameters(query, { name: 'Milo' })
+
+      expect(getQueryParameters(query)).toEqual({ name: 'Milo' })
+
+      cleanup()
+    })
+  })
+
+  describe('setQueryParameters', () => {
+    it('sets the parameters of a query', () => {
+      const { cleanup, db } = createTestDatabase({ doc1: { name: 'Fiona' }, doc2: { name: 'Milo' } })
+      const query = createQuery<{ id: string }>(db, 'SELECT _id FROM _ WHERE name = $name')
+
+      setQueryParameters(query, { name: 'Milo' })
+
+      const results1 = executeQuery(query)
+      expect(results1).toHaveLength(1)
+      expect(results1[0].id).toBe('doc2')
+
+      setQueryParameters(query, { name: 'Fiona' })
+
+      const results2 = executeQuery(query)
+      expect(results2).toHaveLength(1)
+      expect(results2[0].id).toBe('doc1')
+
+      setQueryParameters(query, { name: 'Phil' })
+
+      const results3 = executeQuery(query)
+      expect(results3).toHaveLength(0)
 
       cleanup()
     })

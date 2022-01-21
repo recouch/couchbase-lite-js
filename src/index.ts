@@ -1,6 +1,7 @@
 export * from './fp/Database'
 export * from './fp/Document'
 export * from './fp/Query'
+export * from './fp/scope'
 export * from './oop/Database'
 export * from './oop/Document'
 export * from './oop/Query'

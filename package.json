@@ -1,11 +1,12 @@
 {
-  "name": "couchbase-lite-js",
+  "name": "couchbase-lite",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "build": "node-gyp build && tsc -p tsconfig.lib.json",
     "fetch-source": "node ./fetch-source",
+    "install": "echo 'no install'",
     "rebuild": "node-gyp rebuild",
     "test": "jest",
     "test:watch": "jest --watch"

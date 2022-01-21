@@ -41,7 +41,9 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Database_CreateQuery", Database_CreateQuery),
       DECLARE_NAPI_METHOD("Query_AddChangeListener", Query_AddChangeListener),
       DECLARE_NAPI_METHOD("Query_Execute", Query_Execute),
-      DECLARE_NAPI_METHOD("Query_Explain", Query_Explain)};
+      DECLARE_NAPI_METHOD("Query_Explain", Query_Explain),
+      DECLARE_NAPI_METHOD("Query_Parameters", Query_Parameters),
+      DECLARE_NAPI_METHOD("Query_SetParameters", Query_SetParameters)};
 
   napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(*desc), desc);
   assert(status == napi_ok);

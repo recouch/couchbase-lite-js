@@ -11,8 +11,8 @@ enum QueryLanguage {
   N1QL
 }
 
-type QueryChangeListener<T> = (results: T[]) => void
-type RemoveQueryChangeListener = () => void
+export type QueryChangeListener<T> = (results: T[]) => void
+export type RemoveQueryChangeListener = () => void
 
 export function addQueryChangeListener<T = unknown>(query: CBLQueryRef<T>, handler: QueryChangeListener<T>): RemoveQueryChangeListener {
   const cb = (data: string) => handler(JSON.parse(data) as T[])
@@ -21,8 +21,9 @@ export function addQueryChangeListener<T = unknown>(query: CBLQueryRef<T>, handl
 }
 
 export function createQuery<T = unknown, P = Record<string, string>>(db: CBLDatabaseRef, query: string | unknown[]): CBLQueryRef<T, P> {
+  // Remove unnecessary whitespace from N1QL queries, which cause runtime errors
   return typeof query === 'string'
-    ? CBL.Database_CreateQuery(db, QueryLanguage.N1QL, query)
+    ? CBL.Database_CreateQuery(db, QueryLanguage.N1QL, query.replace(/\s+/g, ' ').trim())
     : CBL.Database_CreateQuery(db, QueryLanguage.JSON, JSON.stringify(query))
 }
 
@@ -35,9 +36,9 @@ export function explainQuery(query: CBLQueryRef): string {
 }
 
 export function getQueryParameters<T = unknown, P = Record<string, string>>(query: CBLQueryRef<T, P>): P {
-  return CBL.Query_Parameters(query)
+  return JSON.parse(CBL.Query_Parameters(query))
 }
 
 export function setQueryParameters<T = unknown, P = Record<string, string>>(query: CBLQueryRef<T, P>, parameters: Partial<P>): boolean {
-  return CBL.Query_SetParameters(query, parameters)
+  return CBL.Query_SetParameters(query, JSON.stringify(parameters))
 }

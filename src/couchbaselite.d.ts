@@ -1,0 +1,30 @@
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+declare module '*couchbaselite.node' {
+  function Database_BeginTransaction(...args: any[]): any
+  function Database_Close(...args: any[]): any
+  function Database_Delete(...args: any[]): any
+  function Database_EndTransaction(...args: any[]): any
+  function Database_Open(...args: any[]): any
+  function Database_Name(...args: any[]): any
+  function Database_Path(...args: any[]): any
+  function DeleteDatabase(...args: any[]): any
+  function Database_AddChangeListener(...args: any[]): any
+  function Database_AddDocumentChangeListener(...args: any[]): any
+  function Database_GetDocument(...args: any[]): any
+  function Database_GetMutableDocument(...args: any[]): any
+  function Database_SaveDocument(...args: any[]): any
+  function Database_DeleteDocument(...args: any[]): any
+  function Document_Create(...args: any[]): any
+  function Document_CreateWithID(...args: any[]): any
+  function Document_CreateJSON(...args: any[]): any
+  function Document_ID(...args: any[]): any
+  function Document_SetJSON(...args: any[]): any
+  function Database_CreateQuery(...args: any[]): any
+  function Query_AddChangeListener(...args: any[]): any
+  function Query_Execute(...args: any[]): any
+  function Query_Explain(...args: any[]): any
+  function Query_Parameters(...args: any[]): any
+  function Query_SetParameters(...args: any[]): any
+}

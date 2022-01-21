@@ -20,7 +20,6 @@
                 "src/c/util.c",
                 "src/c/main.c",
             ],
-
             "libraries": [
                 "-Wl,-rpath,@loader_path/.",
                 "libcblite.3.dylib",

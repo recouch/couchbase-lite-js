@@ -1,3 +1,3 @@
-import bindings from 'bindings'
+import CBL from '../build/Release/couchbaselite.node'
 
-export const CBL = bindings('couchbaselite')
+export { CBL }
