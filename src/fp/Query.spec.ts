@@ -84,6 +84,14 @@ describe('query functions', () => {
 
       cleanup()
     })
+
+    it('throws on an invalid N1QL query', () => {
+      const { cleanup, db } = createTestDatabase()
+
+      expect(() => createQuery(db, 'SELECT * FROM *')).toThrowError(expect.objectContaining({ message: expect.stringContaining('N1QL syntax error') }))
+
+      cleanup()
+    })
   })
 
   describe('execute', () => {

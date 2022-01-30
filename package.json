@@ -4,7 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "node-gyp build && tsc -p tsconfig.lib.json",
+    "build:c": "node-gyp build",
+    "build:ts": "rm -rf ./dist && tsc -p tsconfig.lib.json",
+    "build": "npm run build:c && npm run build:ts",
     "fetch-source": "node ./fetch-source",
     "install": "echo 'no install'",
     "rebuild": "node-gyp rebuild",

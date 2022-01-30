@@ -7,6 +7,10 @@ export interface CBLDatabaseRef extends Symbol {
   type: 'Database'
 }
 
+export function abortTransaction(db: CBLDatabaseRef): boolean {
+  return CBL.Database_EndTransaction(db, false)
+}
+
 export function addDatabaseChangeListener(db: CBLDatabaseRef, handler: DatabaseChangeListener): RemoveDatabaseChangeListener {
   return CBL.Database_AddChangeListener(db, handler)
 }
@@ -17,6 +21,10 @@ export function beginTransaction(db: CBLDatabaseRef): boolean {
 
 export function closeDatabase(db: CBLDatabaseRef): boolean {
   return CBL.Database_Close(db)
+}
+
+export function commitTransaction(db: CBLDatabaseRef): boolean {
+  return CBL.Database_EndTransaction(db, true)
 }
 
 export function databaseName(db: CBLDatabaseRef): string {

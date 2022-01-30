@@ -45,6 +45,12 @@ napi_value Database_CreateQuery(napi_env env, napi_callback_info info)
 
   CBLQuery *query = CBLDatabase_CreateQuery(databaseRef->database, language, FLStr(queryString), NULL, &err);
 
+  if (!query)
+  {
+    throwCBLError(env, err);
+    return NULL;
+  }
+
   external_query_ref *queryRef = createExternalQueryRef(query);
   napi_value res;
   CHECK(napi_create_external(env, queryRef, finalize_query_external, NULL, &res));
@@ -84,6 +90,13 @@ napi_value Query_Execute(napi_env env, napi_callback_info info)
   CBLQuery *query = queryRef->query;
 
   CBLResultSet *results = CBLQuery_Execute(query, &err);
+
+  if (!results)
+  {
+    throwCBLError(env, err);
+    return NULL;
+  }
+
   FLStringResult json = ResultSet_ToJSON(results);
   CBLResultSet_Release(results);
   napi_value res;
@@ -153,6 +166,13 @@ napi_value Query_SetParameters(napi_env env, napi_callback_info info)
 
   FLError err;
   FLDoc parametersDoc = FLDoc_FromJSON(FLStr(json), &err);
+
+  if (!parametersDoc)
+  {
+    CHECK(napi_throw_error(env, err, "An error occured"));
+    return NULL;
+  }
+
   FLDict parameters = FLValue_AsDict(FLDoc_GetRoot(parametersDoc));
 
   CBLQuery_SetParameters(query, parameters);
@@ -167,6 +187,12 @@ static void QueryChangeListener(void *cb, CBLQuery *query, CBLListenerToken *tok
 {
   CBLError err;
   CBLResultSet *results = CBLQuery_CopyCurrentResults(query, token, &err);
+
+  if (!results)
+  {
+    return;
+  }
+
   FLStringResult json = ResultSet_ToJSON(results);
   char *data;
   data = malloc(json.size + 1);

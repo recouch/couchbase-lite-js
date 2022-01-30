@@ -1,4 +1,4 @@
-import { addDatabaseChangeListener, beginTransaction, CBLDatabaseRef, closeDatabase, databaseName, databasePath, deleteDatabase, endTransaction } from './Database'
+import { abortTransaction, addDatabaseChangeListener, beginTransaction, CBLDatabaseRef, closeDatabase, commitTransaction, databaseName, databasePath, deleteDatabase, endTransaction } from './Database'
 import { addDocumentChangeListener, CBLDocumentRef, CBLMutableDocumentRef, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentProperties, getMutableDocument, saveDocument, setDocumentProperties } from './Document'
 import { addQueryChangeListener, CBLQueryRef, createQuery, executeQuery, explainQuery, getQueryParameters, QueryChangeListener, RemoveQueryChangeListener, setQueryParameters } from './Query'
 
@@ -26,9 +26,11 @@ export interface ScopedQuery<T = unknown[], P = Record<string, string>> {
 
 export const scopeDatabase = (dbRef: CBLDatabaseRef) => ({
   // Database methods
+  abortTransaction: abortTransaction.bind(null, dbRef),
   addChangeListener: addDatabaseChangeListener.bind(null, dbRef),
   beginTransaction: beginTransaction.bind(null, dbRef),
   close: closeDatabase.bind(null, dbRef),
+  commitTransaction: commitTransaction.bind(null, dbRef),
   name: databaseName.bind(null, dbRef),
   path: databasePath.bind(null, dbRef),
   delete: deleteDatabase.bind(null, dbRef),

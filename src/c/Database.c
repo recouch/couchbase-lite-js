@@ -183,7 +183,13 @@ napi_value Database_BeginTransaction(napi_env env, napi_callback_info info)
   CHECK(napi_get_value_external(env, args[0], (void *)&databaseRef));
 
   CBLError err;
-  CBLDatabase_BeginTransaction(databaseRef->database, &err);
+  bool didBegin = CBLDatabase_BeginTransaction(databaseRef->database, &err);
+
+  if (!didBegin)
+  {
+    throwCBLError(env, err);
+    return NULL;
+  }
 
   napi_get_boolean(env, true, &res);
   return res;
@@ -206,7 +212,13 @@ napi_value Database_EndTransaction(napi_env env, napi_callback_info info)
   CHECK(napi_get_value_bool(env, args[1], &commit));
 
   CBLError err;
-  CBLDatabase_EndTransaction(databaseRef->database, commit, &err);
+  bool didEnd = CBLDatabase_EndTransaction(databaseRef->database, commit, &err);
+
+  if (!didEnd)
+  {
+    throwCBLError(env, err);
+    return NULL;
+  }
 
   napi_get_boolean(env, true, &res);
   return res;

@@ -72,8 +72,13 @@ napi_value Database_GetDocument(napi_env env, napi_callback_info info)
     external_document_ref *documentRef = createExternalDocumentRef((CBLDocument *)doc);
     CHECK(napi_create_external(env, documentRef, finalize_document_external, NULL, &res));
   }
+  else if (err.code == 0)
+  {
+    CHECK(napi_get_null(env, &res));
+  }
   else
   {
+    throwCBLError(env, err);
     CHECK(napi_get_null(env, &res));
   }
 
@@ -109,8 +114,13 @@ napi_value Database_GetMutableDocument(napi_env env, napi_callback_info info)
     external_document_ref *documentRef = createExternalDocumentRef(doc);
     CHECK(napi_create_external(env, documentRef, finalize_document_external, NULL, &res));
   }
+  else if (err.code == 0)
+  {
+    CHECK(napi_get_null(env, &res));
+  }
   else
   {
+    throwCBLError(env, err);
     CHECK(napi_get_null(env, &res));
   }
 
