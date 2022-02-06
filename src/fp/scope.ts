@@ -1,6 +1,7 @@
-import { abortTransaction, addDatabaseChangeListener, beginTransaction, CBLDatabaseRef, closeDatabase, commitTransaction, databaseName, databasePath, deleteDatabase, endTransaction } from './Database'
-import { addDocumentChangeListener, CBLDocumentRef, CBLMutableDocumentRef, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentProperties, getMutableDocument, saveDocument, setDocumentProperties } from './Document'
-import { addQueryChangeListener, CBLQueryRef, createQuery, executeQuery, explainQuery, getQueryParameters, QueryChangeListener, RemoveQueryChangeListener, setQueryParameters } from './Query'
+import { CBL } from '../CBL'
+import { abortTransaction, addDatabaseChangeListener, beginTransaction, closeDatabase, commitTransaction, databaseName, databasePath, deleteDatabase, endTransaction } from './Database'
+import { addDocumentChangeListener, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentProperties, getMutableDocument, saveDocument, setDocumentProperties } from './Document'
+import { addQueryChangeListener, createQuery, executeQuery, explainQuery, getQueryParameters, QueryChangeListener, setQueryParameters } from './Query'
 
 export interface ScopedDocument<T = unknown> {
   delete: () => boolean
@@ -17,14 +18,14 @@ export interface ScopedMutableDocument<T = unknown> {
 }
 
 export interface ScopedQuery<T = unknown[], P = Record<string, string>> {
-  addChangeListener: (handler: QueryChangeListener<T>) => RemoveQueryChangeListener
+  addChangeListener: (handler: QueryChangeListener<T>) => CBL.RemoveQueryChangeListener
   execute: () => T[]
   explain: () => string
   getParameters: () => P
   setParameters: (parameters: Partial<P>) => boolean
 }
 
-export const scopeDatabase = (dbRef: CBLDatabaseRef) => ({
+export const scopeDatabase = (dbRef: CBL.DatabaseRef) => ({
   // Database methods
   abortTransaction: abortTransaction.bind(null, dbRef),
   addChangeListener: addDatabaseChangeListener.bind(null, dbRef),
@@ -46,13 +47,13 @@ export const scopeDatabase = (dbRef: CBLDatabaseRef) => ({
   createQuery: <T = unknown[], P = Record<string, string>>(query: string | unknown[]) => scopeQuery(createQuery<T, P>(dbRef, query))
 })
 
-export const scopeDocument = <T = unknown>(dbRef: CBLDatabaseRef, docRef: CBLDocumentRef<T> | null): ScopedDocument<T> | null => docRef && {
+export const scopeDocument = <T = unknown>(dbRef: CBL.DatabaseRef, docRef: CBL.DocumentRef<T> | null): ScopedDocument<T> | null => docRef && {
   delete: deleteDocument.bind(null, dbRef, docRef),
   getID: getDocumentID.bind(null, docRef),
   getProperties: () => getDocumentProperties(docRef)
 }
 
-export const scopeMutableDocument = <T = unknown>(dbRef: CBLDatabaseRef, docRef: CBLMutableDocumentRef<T> | null): ScopedMutableDocument<T> | null => docRef && {
+export const scopeMutableDocument = <T = unknown>(dbRef: CBL.DatabaseRef, docRef: CBL.MutableDocumentRef<T> | null): ScopedMutableDocument<T> | null => docRef && {
   delete: deleteDocument.bind(null, dbRef, docRef),
   getID: getDocumentID.bind(null, docRef),
   getProperties: () => getDocumentProperties(docRef),
@@ -60,7 +61,7 @@ export const scopeMutableDocument = <T = unknown>(dbRef: CBLDatabaseRef, docRef:
   setProperties: setDocumentProperties.bind(null, docRef)
 }
 
-export const scopeQuery = <T = unknown[], P = Record<string, string>>(queryRef: CBLQueryRef<T, P>): ScopedQuery<T, P> => ({
+export const scopeQuery = <T = unknown[], P = Record<string, string>>(queryRef: CBL.QueryRef<T, P>): ScopedQuery<T, P> => ({
   addChangeListener: (handler: QueryChangeListener<T>) => addQueryChangeListener(queryRef, handler),
   execute: () => executeQuery(queryRef),
   explain: explainQuery.bind(null, queryRef),

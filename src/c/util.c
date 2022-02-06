@@ -42,6 +42,14 @@ external_query_ref *createExternalQueryRef(CBLQuery *query)
   return queryRef;
 }
 
+external_replicator_ref *createExternalReplicatorRef(CBLReplicator *replicator)
+{
+  external_replicator_ref *replicatorRef = malloc(sizeof(*replicatorRef));
+  replicatorRef->replicator = replicator;
+
+  return replicatorRef;
+}
+
 bool isDev()
 {
   return strcmp(getenv("NODE_ENV"), "dev") == 0 || strcmp(getenv("NODE_ENV"), "development") == 0;
@@ -67,7 +75,7 @@ void logToFile(char *line)
 
 void throwCBLError(napi_env env, CBLError err)
 {
-  char code[10];
+  char code[20];
   sprintf(code, "%d", err.code);
 
   FLSliceResult errorMsg = CBLError_Message(&err);

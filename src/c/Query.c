@@ -164,12 +164,11 @@ napi_value Query_SetParameters(napi_env env, napi_callback_info info)
   str_size = str_size + 1;
   napi_get_value_string_utf8(env, args[1], json, str_size, NULL);
 
-  FLError err;
-  FLDoc parametersDoc = FLDoc_FromJSON(FLStr(json), &err);
+  FLDoc parametersDoc = FLDoc_FromJSON(FLStr(json), NULL);
 
   if (!parametersDoc)
   {
-    CHECK(napi_throw_error(env, err, "An error occured"));
+    CHECK(napi_throw_error(env, "", "An error occured"));
     return NULL;
   }
 

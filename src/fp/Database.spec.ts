@@ -3,30 +3,29 @@ import { join } from 'path'
 import { nanoid } from 'nanoid'
 import { addDatabaseChangeListener, beginTransaction, closeDatabase, databaseName, databasePath, deleteDatabase, deleteDatabaseByName, endTransaction, openDatabase } from './Database'
 import { createDocument, getDocument, getDocumentID, getDocumentProperties, saveDocument, setDocumentProperties } from './Document'
-import { createTestDatabase, testDirectory, timeout } from './test-util'
+import { createTestDatabase, testDirectory } from './test-util'
 
 describe('database functions', () => {
   describe('addDatabaseChangeListener', () => {
-    it('calls callback on change', async () => {
-      const { cleanup, db } = createTestDatabase()
-      const doc = createDocument()
-      const fn = jest.fn()
-      const stop = addDatabaseChangeListener(db, fn)
+    it('calls callback on change', () =>
+      new Promise<void>(resolve => {
+        const { cleanup, db } = createTestDatabase()
+        const doc = createDocument()
+        const fn = jest.fn((ids: string[]) => {
+          expect(stop()).toBe(true)
+          cleanup()
 
-      expect(typeof stop).toBe('function')
+          expect(ids).toEqual([getDocumentID(doc)])
 
-      await timeout()
-      expect(fn).not.toHaveBeenCalled()
+          resolve()
+        })
+        const stop = addDatabaseChangeListener(db, fn)
 
-      saveDocument(db, doc)
+        expect(typeof stop).toBe('function')
 
-      await timeout()
-      expect(fn).toHaveBeenCalledWith([getDocumentID(doc)])
-
-      expect(stop()).toBe(true)
-
-      cleanup()
-    })
+        saveDocument(db, doc)
+      })
+    )
   })
 
   describe('closeDatabase', () => {

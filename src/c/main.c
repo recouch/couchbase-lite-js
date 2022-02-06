@@ -1,6 +1,7 @@
 #include "Database.c"
 #include "Document.c"
 #include "Query.c"
+#include "Replicator.c"
 
 #define DECLARE_NAPI_METHOD(name, func)     \
   {                                         \
@@ -9,6 +10,11 @@
 
 NAPI_MODULE_INIT(/* env, exports */)
 {
+  napi_value CBLJSONLanguage;
+  napi_create_uint32(env, kCBLJSONLanguage, &CBLJSONLanguage);
+  napi_value CBLN1QLLanguage;
+  napi_create_uint32(env, kCBLN1QLLanguage, &CBLN1QLLanguage);
+
   napi_property_descriptor desc[] = {
       // Database lifecycle
       DECLARE_NAPI_METHOD("Database_BeginTransaction", Database_BeginTransaction),
@@ -37,13 +43,22 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Document_ID", Document_ID),
       DECLARE_NAPI_METHOD("Document_SetJSON", Document_SetJSON),
 
-      // Queries
+      // Query
       DECLARE_NAPI_METHOD("Database_CreateQuery", Database_CreateQuery),
       DECLARE_NAPI_METHOD("Query_AddChangeListener", Query_AddChangeListener),
       DECLARE_NAPI_METHOD("Query_Execute", Query_Execute),
       DECLARE_NAPI_METHOD("Query_Explain", Query_Explain),
       DECLARE_NAPI_METHOD("Query_Parameters", Query_Parameters),
-      DECLARE_NAPI_METHOD("Query_SetParameters", Query_SetParameters)};
+      DECLARE_NAPI_METHOD("Query_SetParameters", Query_SetParameters),
+
+      // Replicator
+      DECLARE_NAPI_METHOD("Replicator_Create", Replicator_Create),
+      DECLARE_NAPI_METHOD("Replicator_Config", Replicator_Config),
+      DECLARE_NAPI_METHOD("Replicator_Start", Replicator_Start),
+      DECLARE_NAPI_METHOD("Replicator_Status", Replicator_Status),
+      DECLARE_NAPI_METHOD("Replicator_Stop", Replicator_Stop),
+      {"CBLJSONLanguage", 0, 0, 0, 0, CBLJSONLanguage, napi_default, 0},
+      {"CBLN1QLLanguage", 0, 0, 0, 0, CBLN1QLLanguage, napi_default, 0}};
 
   napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(*desc), desc);
   assert(status == napi_ok);
