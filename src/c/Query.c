@@ -5,16 +5,6 @@
 #include "Listener.h"
 #include "util.h"
 
-#define CHECK(expr)                                                                 \
-  {                                                                                 \
-    napi_status status = (expr);                                                    \
-    if (status != napi_ok)                                                          \
-    {                                                                               \
-      fprintf(stderr, "%s:%d: failed assertion `%s'\n", __FILE__, __LINE__, #expr); \
-      fflush(stderr);                                                               \
-    }                                                                               \
-  }
-
 static void finalize_query_external(napi_env env, void *data, void *hint)
 {
   external_query_ref *queryRef = (external_query_ref *)data;
@@ -251,7 +241,7 @@ napi_value Query_AddChangeListener(napi_env env, napi_callback_info info)
 
   struct StopListenerData *stopListenerData = newStopListenerData(listenerCallback, token);
   napi_value stopListener;
-  CHECK(napi_create_function(env, "stopDatabaseChangeListener", NAPI_AUTO_LENGTH, StopChangeListener, stopListenerData, &stopListener));
+  CHECK(napi_create_function(env, "stopQueryChangeListener", NAPI_AUTO_LENGTH, StopChangeListener, stopListenerData, &stopListener));
 
   return stopListener;
 }

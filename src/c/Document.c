@@ -5,16 +5,6 @@
 #include "Listener.h"
 #include "util.h"
 
-#define CHECK(expr)                                                                 \
-  {                                                                                 \
-    napi_status status = (expr);                                                    \
-    if (status != napi_ok)                                                          \
-    {                                                                               \
-      fprintf(stderr, "%s:%d: failed assertion `%s'\n", __FILE__, __LINE__, #expr); \
-      fflush(stderr);                                                               \
-    }                                                                               \
-  }
-
 static void finalize_document_external(napi_env env, void *data, void *hint)
 {
   external_document_ref *documentRef = (external_document_ref *)data;
@@ -62,7 +52,7 @@ napi_value Database_GetDocument(napi_env env, napi_callback_info info)
 
   size_t buffer_size = 128;
   char docID[buffer_size];
-  napi_get_value_string_utf8(env, args[1], docID, buffer_size, NULL);
+  CHECK(napi_get_value_string_utf8(env, args[1], docID, buffer_size, NULL));
 
   const CBLDocument *doc = CBLDatabase_GetDocument(databaseRef->database, FLStr(docID), &err);
 
@@ -361,7 +351,7 @@ napi_value Database_AddDocumentChangeListener(napi_env env, napi_callback_info i
 
   struct StopListenerData *stopListenerData = newStopListenerData(listenerCallback, token);
   napi_value stopListener;
-  CHECK(napi_create_function(env, "stopDatabaseChangeListener", NAPI_AUTO_LENGTH, StopChangeListener, stopListenerData, &stopListener));
+  CHECK(napi_create_function(env, "stopDocumentChangeListener", NAPI_AUTO_LENGTH, StopChangeListener, stopListenerData, &stopListener));
 
   return stopListener;
 }

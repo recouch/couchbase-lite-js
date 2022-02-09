@@ -5,16 +5,6 @@
 #include "Listener.h"
 #include "util.h"
 
-#define CHECK(expr)                                                                 \
-  {                                                                                 \
-    napi_status status = (expr);                                                    \
-    if (status != napi_ok)                                                          \
-    {                                                                               \
-      fprintf(stderr, "%s:%d: failed assertion `%s'\n", __FILE__, __LINE__, #expr); \
-      fflush(stderr);                                                               \
-    }                                                                               \
-  }
-
 static void finalize_database_external(napi_env env, void *data, void *hint)
 {
   external_database_ref *databaseRef = (external_database_ref *)data;

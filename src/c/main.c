@@ -54,6 +54,8 @@ NAPI_MODULE_INIT(/* env, exports */)
       // Replicator
       DECLARE_NAPI_METHOD("Replicator_Create", Replicator_Create),
       DECLARE_NAPI_METHOD("Replicator_Config", Replicator_Config),
+      DECLARE_NAPI_METHOD("Replicator_IsDocumentPending", Replicator_IsDocumentPending),
+      DECLARE_NAPI_METHOD("Replicator_PendingDocumentIDs", Replicator_PendingDocumentIDs),
       DECLARE_NAPI_METHOD("Replicator_Start", Replicator_Start),
       DECLARE_NAPI_METHOD("Replicator_Status", Replicator_Status),
       DECLARE_NAPI_METHOD("Replicator_Stop", Replicator_Stop),

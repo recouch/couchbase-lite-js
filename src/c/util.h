@@ -2,6 +2,16 @@
 #include <node_api.h>
 #include "cbl/CouchbaseLite.h"
 
+#define CHECK(expr)                                                                 \
+  {                                                                                 \
+    napi_status _napiStatus = (expr);                                               \
+    if (_napiStatus != napi_ok)                                                     \
+    {                                                                               \
+      fprintf(stderr, "%s:%d: failed assertion `%s'\n", __FILE__, __LINE__, #expr); \
+      fflush(stderr);                                                               \
+    }                                                                               \
+  }
+
 typedef struct ExternalDatabaseRef
 {
   CBLDatabase *database;
