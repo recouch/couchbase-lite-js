@@ -37,7 +37,10 @@ declare module '*couchbaselite.node' {
     disableAutoPurge?: boolean
     maxAttempts?: number
     maxAttemptWaitTime?: number
-    heartbeat?: number
+    heartbeat?: number,
+    conflictResolver?: (document: { documentID: string; localDocument: DocumentRef; remoteDocument: DocumentRef }) => void
+    pushFilter?: (document: { document: DocumentRef; accessRemoved: boolean; deleted: boolean }) => void
+    pullFilter?: (document: { document: DocumentRef; accessRemoved: boolean; deleted: boolean }) => void
   }
 
   interface ReplicatorStatus {
@@ -57,6 +60,20 @@ declare module '*couchbaselite.node' {
 
   type QueryChangeListener = (results: string) => void
   type RemoveQueryChangeListener = () => void
+
+  type ReplicatorChangeListener = (status: ReplicatorStatus) => void
+  type RemoveReplicatorChangeListener = () => void
+
+  type DocumentReplicationListener = (changes: {
+    direction: 'push' | 'pull'
+    documents: {
+      id: string
+      accessRemoved: boolean
+      deleted: boolean
+      error?: string
+    }[]
+  }) => void
+  type RemoveDocumentReplicationListener = () => void
 
   enum QueryLanguage {}
 
@@ -91,8 +108,12 @@ declare module '*couchbaselite.node' {
   function Query_Parameters(query: QueryRef): string
   function Query_SetParameters(query: QueryRef, parametersJSON: string): boolean
 
+  function Replicator_AddChangeListener(replicator: ReplicatorRef, handler: ReplicatorChangeListener): RemoveReplicatorChangeListener
+  function Replicator_AddDocumentReplicationListener(replicator: ReplicatorRef, handler: DocumentReplicationListener): RemoveDocumentReplicationListener
   function Replicator_Create(config: ReplicatorConfiguration): ReplicatorRef
   function Replicator_Config(replicator: ReplicatorRef): ReplicatorConfiguration
+  function Replicator_IsDocumentPending(replicator: ReplicatorRef, documentID: string): boolean
+  function Replicator_PendingDocumentIDs(replicator: ReplicatorRef): string[]
   function Replicator_Start(replicator: ReplicatorRef, resetCheckpoint?: boolean): boolean
   function Replicator_Status(replicator: ReplicatorRef): ReplicatorStatus
   function Replicator_Stop(replicator: ReplicatorRef): boolean

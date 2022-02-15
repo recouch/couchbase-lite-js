@@ -52,6 +52,7 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Query_SetParameters", Query_SetParameters),
 
       // Replicator
+      DECLARE_NAPI_METHOD("Replicator_AddChangeListener", Replicator_AddChangeListener),
       DECLARE_NAPI_METHOD("Replicator_Create", Replicator_Create),
       DECLARE_NAPI_METHOD("Replicator_Config", Replicator_Config),
       DECLARE_NAPI_METHOD("Replicator_IsDocumentPending", Replicator_IsDocumentPending),

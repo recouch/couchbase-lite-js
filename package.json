@@ -7,6 +7,7 @@
     "build:c": "node-gyp build",
     "build:ts": "rm -rf ./dist && tsc -p tsconfig.lib.json",
     "build": "npm run build:c && npm run build:ts",
+    "build-for-electron": "./build-for-electron.sh",
     "fetch-source": "node ./fetch-source",
     "install": "echo 'no install'",
     "rebuild": "node-gyp rebuild",

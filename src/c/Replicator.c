@@ -769,7 +769,7 @@ static void DocumentReplicationListenerCallJS(napi_env env, napi_value js_cb, vo
       napi_value napiErrorMsg;
 
       CHECK(napi_create_string_utf8(env, errorMsg.buf, errorMsg.size, &napiErrorMsg))
-      CHECK(napi_set_named_property(env, replicatedDocument, "error", replicatedDocumentID));
+      CHECK(napi_set_named_property(env, replicatedDocument, "error", napiErrorMsg));
     }
 
     CHECK(napi_set_element(env, documents, i, replicatedDocument));

@@ -2,6 +2,7 @@ import { CBL } from '../CBL'
 import { abortTransaction, addDatabaseChangeListener, beginTransaction, closeDatabase, commitTransaction, databaseName, databasePath, deleteDatabase, endTransaction } from './Database'
 import { addDocumentChangeListener, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentProperties, getMutableDocument, saveDocument, setDocumentProperties } from './Document'
 import { addQueryChangeListener, createQuery, executeQuery, explainQuery, getQueryParameters, QueryChangeListener, setQueryParameters } from './Query'
+import { addReplicatorChangeListener, addDocumentReplicationListener, replicatorConfiguration, isDocumentPendingReplication, documentsPendingReplication, startReplicator, replicatorStatus, stopReplicator, createReplicator } from './Replicator'
 
 export interface ScopedDocument<T = unknown> {
   delete: () => boolean
@@ -44,7 +45,10 @@ export const scopeDatabase = (dbRef: CBL.DatabaseRef) => ({
   getMutableDocument: <T = unknown>(id: string) => scopeMutableDocument<T>(dbRef, getMutableDocument(dbRef, id)),
 
   // Query methods
-  createQuery: <T = unknown[], P = Record<string, string>>(query: string | unknown[]) => scopeQuery(createQuery<T, P>(dbRef, query))
+  createQuery: <T = unknown[], P = Record<string, string>>(query: string | unknown[]) => scopeQuery(createQuery<T, P>(dbRef, query)),
+
+  // Replicator methods
+  createReplicator: (config: Omit<CBL.ReplicatorConfiguration, 'database'>) => scopeReplicator(createReplicator({ ...config, database: dbRef }))
 })
 
 export const scopeDocument = <T = unknown>(dbRef: CBL.DatabaseRef, docRef: CBL.DocumentRef<T> | null): ScopedDocument<T> | null => docRef && {
@@ -67,6 +71,17 @@ export const scopeQuery = <T = unknown[], P = Record<string, string>>(queryRef: 
   explain: explainQuery.bind(null, queryRef),
   getParameters: () => getQueryParameters(queryRef),
   setParameters: setQueryParameters.bind(null, queryRef)
+})
+
+export const scopeReplicator = (replicatorRef: CBL.ReplicatorRef) => ({
+  addChangeListener: addReplicatorChangeListener.bind(null, replicatorRef),
+  addDocumentReplicationListener: addDocumentReplicationListener.bind(null, replicatorRef),
+  configuration: replicatorConfiguration.bind(null, replicatorRef),
+  documentsPendingReplication: documentsPendingReplication.bind(null, replicatorRef),
+  isDocumentPendingReplication: isDocumentPendingReplication.bind(null, replicatorRef),
+  start: startReplicator.bind(null, replicatorRef),
+  status: replicatorStatus.bind(null, replicatorRef),
+  stop: stopReplicator.bind(null, replicatorRef)
 })
 
 export type ScopedDatabase = ReturnType<typeof scopeDatabase>
