@@ -12,6 +12,21 @@
     }                                                                               \
   }
 
+typedef struct ExternalBlobRef
+{
+  CBLBlob *blob;
+} external_blob_ref;
+
+typedef struct ExternalBlobReadStreamRef
+{
+  CBLBlobReadStream *stream;
+} external_blob_read_stream_ref;
+
+typedef struct ExternalBlobWriteStreamRef
+{
+  CBLBlobWriteStream *stream;
+} external_blob_write_stream_ref;
+
 typedef struct ExternalDatabaseRef
 {
   CBLDatabase *database;
@@ -34,6 +49,9 @@ typedef struct ExternalReplicatorRef
 } external_replicator_ref;
 
 void assertType(napi_env env, napi_value value, napi_valuetype type, char *errorMsg);
+external_blob_ref *createExternalBlobRef(CBLBlob *blob);
+external_blob_read_stream_ref *createExternalBlobReadStreamRef(CBLBlobReadStream *stream);
+external_blob_write_stream_ref *createExternalBlobWriteStreamRef(CBLBlobWriteStream *stream);
 external_database_ref *createExternalDatabaseRef(CBLDatabase *database);
 external_document_ref *createExternalDocumentRef(CBLDocument *document);
 external_query_ref *createExternalQueryRef(CBLQuery *query);

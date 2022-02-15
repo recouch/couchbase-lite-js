@@ -1,3 +1,4 @@
+#include "Blob.c"
 #include "Database.c"
 #include "Document.c"
 #include "Query.c"
@@ -60,6 +61,29 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Replicator_Start", Replicator_Start),
       DECLARE_NAPI_METHOD("Replicator_Status", Replicator_Status),
       DECLARE_NAPI_METHOD("Replicator_Stop", Replicator_Stop),
+
+      // Blob
+      DECLARE_NAPI_METHOD("Blob_Content", Blob_Content),
+      DECLARE_NAPI_METHOD("Blob_ContentType", Blob_ContentType),
+      DECLARE_NAPI_METHOD("Blob_CreateJSON", Blob_CreateJSON),
+      DECLARE_NAPI_METHOD("Blob_CreateWithData", Blob_CreateWithData),
+      DECLARE_NAPI_METHOD("Blob_CreateWithStream", Blob_CreateWithStream),
+      DECLARE_NAPI_METHOD("Blob_Digest", Blob_Digest),
+      DECLARE_NAPI_METHOD("Blob_Equals", Blob_Equals),
+      DECLARE_NAPI_METHOD("Blob_Length", Blob_Length),
+      DECLARE_NAPI_METHOD("Blob_OpenContentStream", Blob_OpenContentStream),
+      DECLARE_NAPI_METHOD("BlobReader_Close", BlobReader_Close),
+      DECLARE_NAPI_METHOD("BlobReader_Read", BlobReader_Read),
+      DECLARE_NAPI_METHOD("BlobWriter_Close", BlobWriter_Close),
+      DECLARE_NAPI_METHOD("BlobWriter_Create", BlobWriter_Create),
+      DECLARE_NAPI_METHOD("BlobWriter_Write", BlobWriter_Write),
+      DECLARE_NAPI_METHOD("Database_GetBlob", Database_GetBlob),
+      DECLARE_NAPI_METHOD("Database_SaveBlob", Database_SaveBlob),
+      DECLARE_NAPI_METHOD("Document_GetBlob", Document_GetBlob),
+      DECLARE_NAPI_METHOD("Document_IsBlob", Document_IsBlob),
+      DECLARE_NAPI_METHOD("Document_SetBlob", Document_SetBlob),
+
+      // Constants
       {"CBLJSONLanguage", 0, 0, 0, 0, CBLJSONLanguage, napi_default, 0},
       {"CBLN1QLLanguage", 0, 0, 0, 0, CBLN1QLLanguage, napi_default, 0}};
 

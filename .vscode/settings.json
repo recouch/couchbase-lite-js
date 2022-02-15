@@ -13,6 +13,7 @@
     "locale": "c",
     "memory": "c",
     "mutex": "c",
-    "unordered_map": "c"
+    "unordered_map": "c",
+    "util.h": "c"
   }
 }

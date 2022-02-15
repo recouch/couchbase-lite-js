@@ -17,6 +17,30 @@ void assertType(napi_env env, napi_value value, napi_valuetype type, char *error
   }
 }
 
+external_blob_ref *createExternalBlobRef(CBLBlob *blob)
+{
+  external_blob_ref *blobRef = malloc(sizeof(*blobRef));
+  blobRef->blob = blob;
+
+  return blobRef;
+}
+
+external_blob_read_stream_ref *createExternalBlobReadStreamRef(CBLBlobReadStream *stream)
+{
+  external_blob_read_stream_ref *streamRef = malloc(sizeof(*streamRef));
+  streamRef->stream = stream;
+
+  return streamRef;
+}
+
+external_blob_write_stream_ref *createExternalBlobWriteStreamRef(CBLBlobWriteStream *stream)
+{
+  external_blob_write_stream_ref *streamRef = malloc(sizeof(*streamRef));
+  streamRef->stream = stream;
+
+  return streamRef;
+}
+
 external_database_ref *createExternalDatabaseRef(CBLDatabase *database)
 {
   external_database_ref *databaseRef = malloc(sizeof(*databaseRef));
@@ -81,6 +105,7 @@ void throwCBLError(napi_env env, CBLError err)
   FLSliceResult errorMsg = CBLError_Message(&err);
   char msg[errorMsg.size + 1];
   assert(FLSlice_ToCString(FLSliceResult_AsSlice(errorMsg), msg, errorMsg.size + 1) == true);
+  FLSliceResult_Release(errorMsg);
 
   assert(napi_throw_error(env, code, msg) == napi_ok);
 }

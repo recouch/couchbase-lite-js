@@ -1,6 +1,18 @@
 /* eslint-disable camelcase */
 
 declare module '*couchbaselite.node' {
+  interface BlobRef extends Symbol {
+    type: 'Blob'
+  }
+
+  interface BlobReadStreamRef extends Symbol {
+    type: 'BlobReadStream'
+  }
+
+  interface BlobWriteStreamRef extends Symbol {
+    type: 'BlobWriteStream'
+  }
+
   interface DatabaseRef extends Symbol {
     type: 'Database'
   }
@@ -25,6 +37,13 @@ declare module '*couchbaselite.node' {
   // eslint-disable-next-line @typescript-eslint/no-empty-interface, @typescript-eslint/no-unused-vars
   interface ReplicatorRef extends Symbol {
     type: 'Replicator'
+  }
+
+  interface BlobMetadata {
+    '@type': 'blob'
+    content_type?: string
+    digest: string
+    length: number
   }
 
   type ReplicatorType = 'pushAndPull' | 'push' | 'pull'
@@ -117,4 +136,24 @@ declare module '*couchbaselite.node' {
   function Replicator_Start(replicator: ReplicatorRef, resetCheckpoint?: boolean): boolean
   function Replicator_Status(replicator: ReplicatorRef): ReplicatorStatus
   function Replicator_Stop(replicator: ReplicatorRef): boolean
+
+  function Blob_Content(blob: BlobRef): Buffer
+  function Blob_ContentType(blob: BlobRef): string
+  function Blob_CreateJSON(blob: BlobRef): string
+  function Blob_CreateWithData(contentType: string, buffer: Buffer): BlobRef
+  function Blob_CreateWithStream(contentType: string, stream: BlobWriteStreamRef): BlobRef
+  function Blob_Digest(blob: BlobRef): string
+  function Blob_Equals(blob: BlobRef, anotherBlob: BlobRef): boolean
+  function Blob_Length(blob: BlobRef): string
+  function Blob_OpenContentStream(blob: BlobRef): BlobReadStreamRef
+  function BlobReader_Close(stream: BlobReadStreamRef): void
+  function BlobReader_Read(stream: BlobReadStreamRef, maxLength: number): Buffer
+  function BlobWriter_Close(stream: BlobWriteStreamRef): void
+  function BlobWriter_Create(database: DatabaseRef): BlobWriteStreamRef
+  function BlobWriter_Write(stream: BlobWriteStreamRef, buffer: Buffer): boolean
+  function Database_GetBlob(database: DatabaseRef, properties: string): BlobRef
+  function Database_SaveBlob(database: DatabaseRef, blob: BlobRef): boolean
+  function Document_GetBlob(doc: DocumentRef | MutableDocumentRef, property: string): BlobRef
+  function Document_IsBlob(doc: DocumentRef | MutableDocumentRef, property: string): boolean
+  function Document_SetBlob(doc: MutableDocumentRef, property: string, blob: BlobRef): void
 }
