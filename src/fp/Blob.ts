@@ -32,7 +32,7 @@ export function blobEquals(blob: CBL.BlobRef, anotherBlob: CBL.BlobRef): boolean
   return CBL.Blob_Equals(blob, anotherBlob)
 }
 
-export function blobLength(blob: CBL.BlobRef): string {
+export function blobLength(blob: CBL.BlobRef): number {
   return CBL.Blob_Length(blob)
 }
 

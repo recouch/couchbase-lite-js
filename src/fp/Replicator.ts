@@ -1,11 +1,11 @@
 import { CBL } from '../CBL'
 
-export function addReplicatorChangeListener(replicator: CBL.ReplicatorRef, handler: CBL.ReplicatorChangeListener): CBL.RemoveReplicatorChangeListener {
-  return CBL.Replicator_AddChangeListener(replicator, handler)
-}
-
 export function addDocumentReplicationListener(replicator: CBL.ReplicatorRef, handler: CBL.DocumentReplicationListener): CBL.RemoveDocumentReplicationListener {
   return CBL.Replicator_AddDocumentReplicationListener(replicator, handler)
+}
+
+export function addReplicatorChangeListener(replicator: CBL.ReplicatorRef, handler: CBL.ReplicatorChangeListener): CBL.RemoveReplicatorChangeListener {
+  return CBL.Replicator_AddChangeListener(replicator, handler)
 }
 
 export function createReplicator(config: CBL.ReplicatorConfiguration):CBL.ReplicatorRef {

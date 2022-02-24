@@ -54,6 +54,7 @@ NAPI_MODULE_INIT(/* env, exports */)
 
       // Replicator
       DECLARE_NAPI_METHOD("Replicator_AddChangeListener", Replicator_AddChangeListener),
+      DECLARE_NAPI_METHOD("Replicator_AddDocumentReplicationListener", Replicator_AddDocumentReplicationListener),
       DECLARE_NAPI_METHOD("Replicator_Create", Replicator_Create),
       DECLARE_NAPI_METHOD("Replicator_Config", Replicator_Config),
       DECLARE_NAPI_METHOD("Replicator_IsDocumentPending", Replicator_IsDocumentPending),

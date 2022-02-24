@@ -643,8 +643,14 @@ napi_value Replicator_PendingDocumentIDs(napi_env env, napi_callback_info info)
 // CBLReplicator_AddChangeListener
 static void ReplicatorChangeListener(void *cb, CBLReplicator *replicator, const CBLReplicatorStatus *status)
 {
+  CBLReplicatorStatus *data;
+  data = malloc(sizeof(CBLReplicatorStatus));
+  data->activity = status->activity;
+  data->error = status->error;
+  data->progress = status->progress;
+
   CHECK(napi_acquire_threadsafe_function((napi_threadsafe_function)cb));
-  CHECK(napi_call_threadsafe_function((napi_threadsafe_function)cb, (void *)status, napi_tsfn_nonblocking));
+  CHECK(napi_call_threadsafe_function((napi_threadsafe_function)cb, (void *)data, napi_tsfn_nonblocking));
   CHECK(napi_release_threadsafe_function((napi_threadsafe_function)cb, napi_tsfn_release));
 }
 
@@ -664,8 +670,7 @@ static void ReplicatorChangeListenerCallJS(napi_env env, napi_value js_cb, void 
   free(data);
 }
 
-napi_value
-Replicator_AddChangeListener(napi_env env, napi_callback_info info)
+napi_value Replicator_AddChangeListener(napi_env env, napi_callback_info info)
 {
   size_t argc = 2;
   napi_value args[argc];
@@ -680,18 +685,20 @@ Replicator_AddChangeListener(napi_env env, napi_callback_info info)
                                 NAPI_AUTO_LENGTH,
                                 &async_resource_name));
 
+  struct StopListenerData *stopListenerData = NULL;
+
   napi_threadsafe_function listenerCallback;
   CHECK(napi_create_threadsafe_function(env, args[1], NULL, async_resource_name, 0, 1, NULL, NULL, NULL, ReplicatorChangeListenerCallJS, &listenerCallback));
-  CHECK(napi_unref_threadsafe_function(env, listenerCallback));
 
   CBLListenerToken *token = CBLReplicator_AddChangeListener(replicatorRef->replicator, ReplicatorChangeListener, listenerCallback);
 
   if (!token)
   {
     napi_throw_error(env, "", "Error adding replication change listener\n");
+    CHECK(napi_release_threadsafe_function(listenerCallback, napi_tsfn_abort));
   }
 
-  struct StopListenerData *stopListenerData = newStopListenerData(listenerCallback, token);
+  stopListenerData = newStopListenerData(listenerCallback, token);
   napi_value stopListener;
   CHECK(napi_create_function(env, "stopReplicationChangeListener", NAPI_AUTO_LENGTH, StopChangeListener, stopListenerData, &stopListener));
 
@@ -699,19 +706,41 @@ Replicator_AddChangeListener(napi_env env, napi_callback_info info)
 }
 
 // CBLReplicator_AddDocumentReplicationListener
+typedef struct
+{
+  char ID[128];           ///< The document ID
+  CBLDocumentFlags flags; ///< Indicates whether the document was deleted or removed
+  CBLError error;         ///< If the code is nonzero, the document failed to replicate.
+} ReplicatedDocument;
+
 typedef struct ReplicatedDocumentStatus
 {
-  const CBLReplicatedDocument *documents;
   unsigned numDocuments;
   bool isPush;
+  ReplicatedDocument *documents;
 } replicated_document_status;
 
 static void DocumentReplicationListener(void *cb, CBLReplicator *replicator, bool isPush, unsigned numDocuments, const CBLReplicatedDocument *documents)
 {
-  replicated_document_status *data = malloc(sizeof(isPush) + sizeof(numDocuments) + sizeof(*documents));
-  data->documents = documents;
+  replicated_document_status *data = malloc(sizeof(*data));
+
+  if (data == NULL)
+  {
+    // TODO: throw an error
+    return;
+  }
+
   data->numDocuments = numDocuments;
   data->isPush = isPush;
+  data->documents = malloc(numDocuments * sizeof(ReplicatedDocument));
+
+  for (unsigned i = 0; i < numDocuments; i++)
+  {
+    FLSlice_ToCString(documents[i].ID, data->documents[i].ID, 128);
+
+    data->documents[i].flags = documents[i].flags;
+    data->documents[i].error = documents[i].error;
+  }
 
   CHECK(napi_acquire_threadsafe_function((napi_threadsafe_function)cb));
   CHECK(napi_call_threadsafe_function((napi_threadsafe_function)cb, data, napi_tsfn_nonblocking));
@@ -723,27 +752,19 @@ static void DocumentReplicationListenerCallJS(napi_env env, napi_value js_cb, vo
   napi_value undefined;
   CHECK(napi_get_undefined(env, &undefined));
 
-  napi_value args[1];
+  napi_value args[2];
   replicated_document_status docStatus = *(replicated_document_status *)data;
-
-  napi_value res;
-  CHECK(napi_create_object(env, &res));
-
-  napi_value direction;
 
   if (docStatus.isPush)
   {
-    CHECK(napi_create_string_utf8(env, "push", NAPI_AUTO_LENGTH, &direction));
+    CHECK(napi_create_string_utf8(env, "push", NAPI_AUTO_LENGTH, &args[0]));
   }
   else
   {
-    CHECK(napi_create_string_utf8(env, "pull", NAPI_AUTO_LENGTH, &direction));
+    CHECK(napi_create_string_utf8(env, "pull", NAPI_AUTO_LENGTH, &args[0]));
   }
 
-  CHECK(napi_set_named_property(env, res, "direction", direction));
-
-  napi_value documents;
-  CHECK(napi_create_array_with_length(env, (size_t)docStatus.numDocuments, &documents));
+  CHECK(napi_create_array_with_length(env, (size_t)docStatus.numDocuments, &args[1]));
 
   for (unsigned int i = 0; i < docStatus.numDocuments; i++)
   {
@@ -751,7 +772,7 @@ static void DocumentReplicationListenerCallJS(napi_env env, napi_value js_cb, vo
     CHECK(napi_create_object(env, &replicatedDocument));
 
     napi_value replicatedDocumentID;
-    CHECK(napi_create_string_utf8(env, docStatus.documents[i].ID.buf, docStatus.documents[i].ID.size, &replicatedDocumentID));
+    CHECK(napi_create_string_utf8(env, docStatus.documents[i].ID, NAPI_AUTO_LENGTH, &replicatedDocumentID));
     CHECK(napi_set_named_property(env, replicatedDocument, "id", replicatedDocumentID));
 
     napi_value replicatedDocumentDeleted;
@@ -761,26 +782,21 @@ static void DocumentReplicationListenerCallJS(napi_env env, napi_value js_cb, vo
     CHECK(napi_set_named_property(env, replicatedDocument, "deleted", replicatedDocumentDeleted));
     CHECK(napi_set_named_property(env, replicatedDocument, "accessRemoved", replicatedDocumentRemoved));
 
-    CBLError docError = docStatus.documents[i].error;
-
-    if (docError.code != 0)
+    if (docStatus.documents[i].error.code != 0)
     {
-      FLSliceResult errorMsg = CBLError_Message(&docError);
+      FLSliceResult errorMsg = CBLError_Message(&docStatus.documents[i].error);
       napi_value napiErrorMsg;
 
-      CHECK(napi_create_string_utf8(env, errorMsg.buf, errorMsg.size, &napiErrorMsg))
+      CHECK(napi_create_string_utf8(env, errorMsg.buf, errorMsg.size, &napiErrorMsg));
       CHECK(napi_set_named_property(env, replicatedDocument, "error", napiErrorMsg));
     }
 
-    CHECK(napi_set_element(env, documents, i, replicatedDocument));
+    CHECK(napi_set_element(env, args[1], i, replicatedDocument));
   }
 
-  CHECK(napi_set_named_property(env, res, "documents", documents));
+  CHECK(napi_call_function(env, undefined, js_cb, 2, args, NULL));
 
-  args[0] = res;
-
-  CHECK(napi_call_function(env, undefined, js_cb, 1, args, NULL));
-
+  free(docStatus.documents);
   free(data);
 }
 
@@ -808,6 +824,7 @@ napi_value Replicator_AddDocumentReplicationListener(napi_env env, napi_callback
   if (!token)
   {
     napi_throw_error(env, "", "Error document replication listener\n");
+    CHECK(napi_release_threadsafe_function(listenerCallback, napi_tsfn_abort));
   }
 
   struct StopListenerData *stopListenerData = newStopListenerData(listenerCallback, token);

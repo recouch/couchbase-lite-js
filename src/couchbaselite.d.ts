@@ -83,15 +83,15 @@ declare module '*couchbaselite.node' {
   type ReplicatorChangeListener = (status: ReplicatorStatus) => void
   type RemoveReplicatorChangeListener = () => void
 
-  type DocumentReplicationListener = (changes: {
-    direction: 'push' | 'pull'
+  type DocumentReplicationListener = (
+    direction: 'push' | 'pull',
     documents: {
       id: string
       accessRemoved: boolean
       deleted: boolean
       error?: string
     }[]
-  }) => void
+  ) => void
   type RemoveDocumentReplicationListener = () => void
 
   enum QueryLanguage {}
@@ -144,7 +144,7 @@ declare module '*couchbaselite.node' {
   function Blob_CreateWithStream(contentType: string, stream: BlobWriteStreamRef): BlobRef
   function Blob_Digest(blob: BlobRef): string
   function Blob_Equals(blob: BlobRef, anotherBlob: BlobRef): boolean
-  function Blob_Length(blob: BlobRef): string
+  function Blob_Length(blob: BlobRef): number
   function Blob_OpenContentStream(blob: BlobRef): BlobReadStreamRef
   function BlobReader_Close(stream: BlobReadStreamRef): void
   function BlobReader_Read(stream: BlobReadStreamRef, maxLength: number): Buffer

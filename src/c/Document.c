@@ -16,7 +16,6 @@ static void finalize_document_external(napi_env env, void *data, void *hint)
 // CBLDocument_ID
 napi_value Document_ID(napi_env env, napi_callback_info info)
 {
-
   size_t argc = 1;
   napi_value args[1];
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
@@ -236,7 +235,6 @@ napi_value Document_CreateWithID(napi_env env, napi_callback_info info)
 // CBLDocument_CreateJSON
 napi_value Document_CreateJSON(napi_env env, napi_callback_info info)
 {
-
   size_t argc = 1;
   napi_value args[1];
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
