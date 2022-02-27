@@ -255,15 +255,21 @@ napi_value Database_Path(napi_env env, napi_callback_info info)
 
 struct ChangedDocs
 {
-  FLString *docIDs;
+  char **docIDs;
   unsigned numDocs;
 };
 
 static void DatabaseChangeListener(void *cb, const CBLDatabase *db, unsigned numDocs, FLString docIDs[])
 {
-  struct ChangedDocs *data = malloc(sizeof(numDocs) + sizeof(*docIDs));
-  data->docIDs = docIDs;
+  struct ChangedDocs *data = malloc(sizeof(*data));
+  data->docIDs = malloc(sizeof(char *) * numDocs);
   data->numDocs = numDocs;
+
+  for (unsigned i = 0; i < numDocs; i++)
+  {
+    data->docIDs[i] = (char *)malloc(docIDs[i].size + 1);
+    FLSlice_ToCString(docIDs[i], data->docIDs[i], 129);
+  }
 
   CHECK(napi_acquire_threadsafe_function((napi_threadsafe_function)cb));
   CHECK(napi_call_threadsafe_function((napi_threadsafe_function)cb, data, napi_tsfn_nonblocking));
@@ -285,14 +291,16 @@ static void DatabaseChangeListenerCallJS(napi_env env, napi_value js_cb, void *c
   for (unsigned int i = 0; i < changedDocsData.numDocs; i++)
   {
     napi_value docID;
-    CHECK(napi_create_string_utf8(env, changedDocsData.docIDs[i].buf, changedDocsData.docIDs[i].size, &docID));
+    CHECK(napi_create_string_utf8(env, changedDocsData.docIDs[i], NAPI_AUTO_LENGTH, &docID));
     CHECK(napi_set_element(env, docIds, i, docID));
+    free(changedDocsData.docIDs[i]);
   }
 
   args[0] = docIds;
 
   CHECK(napi_call_function(env, undefined, js_cb, 1, args, NULL));
 
+  free(changedDocsData.docIDs);
   free(data);
 }
 

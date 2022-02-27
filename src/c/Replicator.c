@@ -493,7 +493,7 @@ napi_value Replicator_Start(napi_env env, napi_callback_info info)
 
   bool resetCheckpoint = false;
 
-  if (args[1])
+  if (argc > 1)
   {
     CHECK(napi_get_value_bool(env, args[1], &resetCheckpoint));
   }
@@ -594,7 +594,7 @@ napi_value Replicator_IsDocumentPending(napi_env env, napi_callback_info info)
   external_replicator_ref *replicatorRef;
   CHECK(napi_get_value_external(env, args[0], (void *)&replicatorRef));
 
-  size_t buffer_size = 128;
+  size_t buffer_size = 129;
   char docID[buffer_size];
   CHECK(napi_get_value_string_utf8(env, args[1], docID, buffer_size, NULL));
 
@@ -708,7 +708,7 @@ napi_value Replicator_AddChangeListener(napi_env env, napi_callback_info info)
 // CBLReplicator_AddDocumentReplicationListener
 typedef struct
 {
-  char ID[128];           ///< The document ID
+  char ID[129];           ///< The document ID
   CBLDocumentFlags flags; ///< Indicates whether the document was deleted or removed
   CBLError error;         ///< If the code is nonzero, the document failed to replicate.
 } ReplicatedDocument;
@@ -736,7 +736,7 @@ static void DocumentReplicationListener(void *cb, CBLReplicator *replicator, boo
 
   for (unsigned i = 0; i < numDocuments; i++)
   {
-    FLSlice_ToCString(documents[i].ID, data->documents[i].ID, 128);
+    FLSlice_ToCString(documents[i].ID, data->documents[i].ID, 129);
 
     data->documents[i].flags = documents[i].flags;
     data->documents[i].error = documents[i].error;
