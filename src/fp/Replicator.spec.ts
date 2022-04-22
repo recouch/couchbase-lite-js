@@ -1,8 +1,7 @@
 import { createServer } from 'http'
 import { createTestDatabase, timeout } from './test-util'
-import { addDocumentReplicationListener, addReplicatorChangeListener, createReplicator, replicatorConfiguration, replicatorStatus, startReplicator, stopReplicator } from './Replicator'
+import { addReplicatorChangeListener, createReplicator, replicatorConfiguration, replicatorStatus, startReplicator, stopReplicator } from './Replicator'
 import { databaseName } from './Database'
-import { createDocument, saveDocument } from './Document'
 
 function getRandomInt(min: number, max: number) {
   min = Math.ceil(min)
@@ -50,6 +49,8 @@ describe('Replicator', () => {
       startReplicator(replicator)
 
       expect(replicatorStatus(replicator).activity).toBe('connecting')
+
+      return timeout(25)
     })
   )
 

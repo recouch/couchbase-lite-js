@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { join } from 'path'
 import { nanoid } from 'nanoid'
-import { addDatabaseChangeListener, beginTransaction, closeDatabase, databaseName, databasePath, deleteDatabase, deleteDatabaseByName, endTransaction, openDatabase } from './Database'
+import { abortTransaction, addDatabaseChangeListener, beginTransaction, closeDatabase, commitTransaction, databaseName, databasePath, deleteDatabase, deleteDatabaseByName, endTransaction, openDatabase } from './Database'
 import { createDocument, getDocument, getDocumentID, getDocumentProperties, saveDocument, setDocumentProperties } from './Document'
 import { createTestDatabase, testDirectory } from './test-util'
 
@@ -196,6 +196,74 @@ describe('database functions', () => {
       expect(getDocument(db, 'doc2')!).toBeNull()
       expect(getDocument(db2, 'doc1')!).toBeNull()
       expect(getDocument(db2, 'doc2')!).toBeNull()
+
+      closeDatabase(db2)
+      cleanup()
+    })
+  })
+
+  describe('abortTransaction', () => {
+    it('reverts all changes when ending a transaction without committing', () => {
+      const { cleanup, db, dbName } = createTestDatabase()
+      const db2 = openDatabase(dbName, testDirectory)
+
+      expect(getDocument(db, 'doc1')).toBeNull()
+      expect(getDocument(db, 'doc2')).toBeNull()
+
+      expect(beginTransaction(db)).toBe(true)
+
+      const doc1 = createDocument('doc1')
+      const doc2 = createDocument('doc2')
+      setDocumentProperties(doc1, { name: 'one' })
+      setDocumentProperties(doc2, { name: 'two' })
+      saveDocument(db, doc1)
+      saveDocument(db, doc2)
+
+      expect(getDocumentProperties(getDocument(db, 'doc1')!)).toEqual({ name: 'one' })
+      expect(getDocumentProperties(getDocument(db, 'doc2')!)).toEqual({ name: 'two' })
+      expect(getDocument(db2, 'doc1')).toBeNull()
+      expect(getDocument(db2, 'doc2')).toBeNull()
+
+      expect(abortTransaction(db)).toBe(true)
+
+      expect(getDocument(db, 'doc1')!).toBeNull()
+      expect(getDocument(db, 'doc2')!).toBeNull()
+      expect(getDocument(db2, 'doc1')!).toBeNull()
+      expect(getDocument(db2, 'doc2')!).toBeNull()
+
+      closeDatabase(db2)
+      cleanup()
+    })
+  })
+
+  describe('commitTransaction', () => {
+    it('commits all changes at once when committing a transaction', () => {
+      const { cleanup, db, dbName } = createTestDatabase()
+      const db2 = openDatabase(dbName, testDirectory)
+
+      expect(getDocument(db, 'doc1')).toBeNull()
+      expect(getDocument(db, 'doc2')).toBeNull()
+
+      expect(beginTransaction(db)).toBe(true)
+
+      const doc1 = createDocument('doc1')
+      const doc2 = createDocument('doc2')
+      setDocumentProperties(doc1, { name: 'one' })
+      setDocumentProperties(doc2, { name: 'two' })
+      saveDocument(db, doc1)
+      saveDocument(db, doc2)
+
+      expect(getDocumentProperties(getDocument(db, 'doc1')!)).toEqual({ name: 'one' })
+      expect(getDocumentProperties(getDocument(db, 'doc2')!)).toEqual({ name: 'two' })
+      expect(getDocument(db2, 'doc1')).toBeNull()
+      expect(getDocument(db2, 'doc2')).toBeNull()
+
+      expect(commitTransaction(db)).toBe(true)
+
+      expect(getDocumentProperties(getDocument(db, 'doc1')!)).toEqual({ name: 'one' })
+      expect(getDocumentProperties(getDocument(db, 'doc2')!)).toEqual({ name: 'two' })
+      expect(getDocumentProperties(getDocument(db2, 'doc1')!)).toEqual({ name: 'one' })
+      expect(getDocumentProperties(getDocument(db2, 'doc2')!)).toEqual({ name: 'two' })
 
       closeDatabase(db2)
       cleanup()

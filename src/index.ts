@@ -1,3 +1,4 @@
+export * from './fp/Blob'
 export * from './fp/Database'
 export * from './fp/Document'
 export * from './fp/Query'

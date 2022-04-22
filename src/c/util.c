@@ -17,10 +17,11 @@ void assertType(napi_env env, napi_value value, napi_valuetype type, char *error
   }
 }
 
-external_blob_ref *createExternalBlobRef(CBLBlob *blob)
+external_blob_ref *createExternalBlobRef(CBLBlob *blob, bool releaseOnFinalize)
 {
   external_blob_ref *blobRef = malloc(sizeof(*blobRef));
   blobRef->blob = blob;
+  blobRef->releaseOnFinalize = releaseOnFinalize;
 
   return blobRef;
 }
@@ -87,6 +88,18 @@ bool isProd()
 bool isTest()
 {
   return strcmp(getenv("NODE_ENV"), "test") == 0;
+}
+
+char *napiValueToLongString(napi_env env, napi_value value, size_t *str_size)
+{
+  napi_get_value_string_utf8(env, value, NULL, 0, &str_size);
+
+  char *res;
+  res = (char *)calloc(str_size + 1, sizeof(char));
+  str_size = str_size + 1;
+  napi_get_value_string_utf8(env, value, res, str_size, NULL);
+
+  return res;
 }
 
 void logToFile(char *line)

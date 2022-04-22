@@ -1,6 +1,6 @@
-import { blobContent, blobContentType, blobCreateJson, blobDigest, blobEquals, blobLength, readBlobReader, closeBlobReader, openBlobContentStream, blobProperties, createBlobWithData, createBlobWithStream, createBlobWriter, databaseGetBlob, databaseSaveBlob, writeBlobWriter, closeBlobWriter, documentSetBlob, documentIsBlob, documentGetBlob } from './Blob'
+import { blobContent, blobContentType, blobCreateJson, blobDigest, blobEquals, blobLength, closeBlobReader, closeBlobWriter, readBlobReader, openBlobContentStream, blobProperties, createBlobWithData, createBlobWithStream, createBlobWriter, databaseGetBlob, databaseSaveBlob, writeBlobWriter, documentSetBlob, documentIsBlob, documentGetBlob } from './Blob'
 import { createDocument, getDocument, saveDocument } from './Document'
-import { createTestDatabase } from './test-util'
+import { createTestDatabase, timeout } from './test-util'
 
 describe('Blob', () => {
   describe('blobEquals', () => {
@@ -75,6 +75,14 @@ describe('Blob', () => {
     })
   })
 
+  describe('blobContent', () => {
+    it('returns the blob\'s content', () => {
+      const blob = createBlobWithData('text/plain', Buffer.from('some contents'))
+
+      expect(blobContent(blob).toString()).toBe('some contents')
+    })
+  })
+
   describe('blobDigest', () => {
     it('returns the blob\'s hashed content', () => {
       const blob = createBlobWithData('text/ordinary', Buffer.from('digestif`'))
@@ -140,23 +148,28 @@ describe('Blob', () => {
     })
   })
 
-  describe('documentSetBlob', () => {
-    it('saves the blob to a document', () => {
+  describe('documentSetBlob & documentGetBlob', () => {
+    it('sets and gets the blob from a document', async () => {
       const { cleanup, db } = createTestDatabase()
-      const doc = createDocument('attaché')
-      const blob = createBlobWithData('text/plain', Buffer.from('documentation'))
 
-      documentSetBlob(doc, 'attachment', blob)
+      // Use closure to have doc and blob released automatically
+      ;(() => {
+        const doc = createDocument('attached')
+        const blob = createBlobWithData('text/plain', Buffer.from('documentation2'))
 
-      expect(saveDocument(db, doc)).toBe(true)
-      expect(documentIsBlob(doc, 'attachment')).toBe(true)
+        documentSetBlob(doc, 'attachment', blob)
 
-      const doc2 = getDocument(db, 'attaché')!
+        saveDocument(db, doc)
+      })()
+
+      // Give Node enough time to collect garbage
+      await timeout(10)
+
+      const doc2 = getDocument(db, 'attached')!
       expect(documentIsBlob(doc2, 'attachment')).toBe(true)
       const blob2 = documentGetBlob(doc2, 'attachment')
 
-      expect(blobEquals(blob, blob2)).toBe(true)
-      expect(blobContent(blob2).toString()).toBe('documentation')
+      expect(blobContent(blob2).toString()).toBe('documentation2')
 
       cleanup()
     })

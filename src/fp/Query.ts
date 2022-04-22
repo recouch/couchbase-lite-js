@@ -11,7 +11,7 @@ export function addQueryChangeListener<T = unknown>(query: CBL.QueryRef<T>, hand
 export function createQuery<T = unknown, P = Record<string, string>>(db: CBL.DatabaseRef, query: string | unknown[]): CBL.QueryRef<T, P> {
   // Remove unnecessary whitespace from N1QL queries, which cause runtime errors
   return typeof query === 'string'
-    ? CBL.Database_CreateQuery(db, CBL.CBLN1QLLanguage, query.replace(/\s+/g, ' ').trim())
+    ? CBL.Database_CreateQuery(db, CBL.CBLN1QLLanguage, query)
     : CBL.Database_CreateQuery(db, CBL.CBLJSONLanguage, JSON.stringify(query))
 }
 

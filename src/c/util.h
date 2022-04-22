@@ -15,6 +15,7 @@
 typedef struct ExternalBlobRef
 {
   CBLBlob *blob;
+  bool releaseOnFinalize;
 } external_blob_ref;
 
 typedef struct ExternalBlobReadStreamRef
@@ -49,7 +50,7 @@ typedef struct ExternalReplicatorRef
 } external_replicator_ref;
 
 void assertType(napi_env env, napi_value value, napi_valuetype type, char *errorMsg);
-external_blob_ref *createExternalBlobRef(CBLBlob *blob);
+external_blob_ref *createExternalBlobRef(CBLBlob *blob, bool releaseOnFinalize);
 external_blob_read_stream_ref *createExternalBlobReadStreamRef(CBLBlobReadStream *stream);
 external_blob_write_stream_ref *createExternalBlobWriteStreamRef(CBLBlobWriteStream *stream);
 external_database_ref *createExternalDatabaseRef(CBLDatabase *database);
@@ -59,5 +60,6 @@ external_replicator_ref *createExternalReplicatorRef(CBLReplicator *replicator);
 bool isDev();
 bool isProd();
 bool isTest();
+char *napiValueToLongString(napi_env env, napi_value value, size_t *str_size);
 void logToFile(char *line);
 void throwCBLError(napi_env env, CBLError err);

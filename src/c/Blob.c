@@ -8,7 +8,11 @@ static void finalize_blob_external(napi_env env, void *data, void *hint)
 {
   external_blob_ref *blobRef = (external_blob_ref *)data;
 
-  CBLBlob_Release(blobRef->blob);
+  if (blobRef->releaseOnFinalize)
+  {
+    CBLBlob_Release(blobRef->blob);
+  }
+
   free(data);
 }
 
@@ -46,7 +50,7 @@ napi_value Blob_CreateWithData(napi_env env, napi_callback_info info)
 
   FLSliceResult data = FLSliceResult_CreateWith(buffer, size);
   CBLBlob *blob = CBLBlob_CreateWithData(FLStr(contentType), FLSliceResult_AsSlice(data));
-  external_blob_ref *blobRef = createExternalBlobRef(blob);
+  external_blob_ref *blobRef = createExternalBlobRef(blob, true);
   FLSliceResult_Release(data);
 
   napi_value res;
@@ -121,8 +125,9 @@ napi_value Document_GetBlob(napi_env env, napi_callback_info info)
 
   FLDict properties = CBLDocument_Properties(docRef->document);
   FLValue blobDict = FLDict_Get(properties, FLStr(property));
+
   const CBLBlob *blob = FLValue_GetBlob(blobDict);
-  external_blob_ref *blobRef = createExternalBlobRef((CBLBlob *)blob);
+  external_blob_ref *blobRef = createExternalBlobRef((CBLBlob *)blob, false);
 
   napi_value res;
   CHECK(napi_create_external(env, blobRef, finalize_blob_external, NULL, &res));
@@ -426,7 +431,7 @@ napi_value Blob_CreateWithStream(napi_env env, napi_callback_info info)
   CHECK(napi_get_value_external(env, args[1], (void *)&streamRef));
 
   CBLBlob *blob = CBLBlob_CreateWithStream(FLStr(contentType), streamRef->stream);
-  external_blob_ref *blobRef = createExternalBlobRef(blob);
+  external_blob_ref *blobRef = createExternalBlobRef(blob, true);
 
   napi_value res;
   CHECK(napi_create_external(env, blobRef, finalize_blob_external, NULL, &res));
@@ -479,7 +484,7 @@ napi_value Database_GetBlob(napi_env env, napi_callback_info info)
     return res;
   }
 
-  external_blob_ref *blobRef = createExternalBlobRef((CBLBlob *)blob);
+  external_blob_ref *blobRef = createExternalBlobRef((CBLBlob *)blob, true);
 
   CHECK(napi_create_external(env, blobRef, finalize_blob_external, NULL, &res));
 

@@ -3,7 +3,7 @@
     {
       "name": "Mac",
       "includePath": [
-        "${workspaceFolder}/lib/libcblite-3.0.0/include",
+        "${workspaceFolder}/lib/libcblite-3.0.1/include",
         "${workspaceFolder}/src/**",
         "/usr/local/include/node"
       ],
