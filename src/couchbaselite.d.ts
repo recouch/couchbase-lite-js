@@ -1,100 +1,9 @@
 /* eslint-disable camelcase */
 
 declare module '*couchbaselite.node' {
-  interface BlobRef extends Symbol {
-    type: 'Blob'
-  }
-
-  interface BlobReadStreamRef extends Symbol {
-    type: 'BlobReadStream'
-  }
-
-  interface BlobWriteStreamRef extends Symbol {
-    type: 'BlobWriteStream'
-  }
-
-  interface DatabaseRef extends Symbol {
-    type: 'Database'
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface, @typescript-eslint/no-unused-vars
-  interface DocumentRef<T = unknown> extends Symbol {
-    type: 'Document'
-    mutable: false
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface, @typescript-eslint/no-unused-vars
-  interface MutableDocumentRef<T = unknown> extends Symbol {
-    type: 'MutableDocument'
-    mutable: true
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface, @typescript-eslint/no-unused-vars
-  interface QueryRef<T = unknown, P = Record<string, string>> extends Symbol {
-    type: 'Query'
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface, @typescript-eslint/no-unused-vars
-  interface ReplicatorRef extends Symbol {
-    type: 'Replicator'
-  }
-
-  interface BlobMetadata {
-    '@type': 'blob'
-    content_type?: string
-    digest: string
-    length: number
-  }
-
-  type ReplicatorType = 'pushAndPull' | 'push' | 'pull'
-
-  interface ReplicatorConfiguration {
-    database: DatabaseRef
-    endpoint: DatabaseRef | string
-    replicatorType?: ReplicatorType
-    continuous?: boolean
-    disableAutoPurge?: boolean
-    maxAttempts?: number
-    maxAttemptWaitTime?: number
-    heartbeat?: number,
-    conflictResolver?: (document: { documentID: string; localDocument: DocumentRef; remoteDocument: DocumentRef }) => void
-    pushFilter?: (document: { document: DocumentRef; accessRemoved: boolean; deleted: boolean }) => void
-    pullFilter?: (document: { document: DocumentRef; accessRemoved: boolean; deleted: boolean }) => void
-  }
-
-  interface ReplicatorStatus {
-    activity: string
-    error: string
-    progress: {
-      complete: number
-      documentCount: number
-    }
-  }
-
-  type DatabaseChangeListener = (docIDs: string[]) => void
-  type RemoveDatabaseChangeListener = () => void
-
-  type DocumentChangeListener = (docID: string) => void
-  type RemoveDocumentChangeListener = () => void
+  import { BlobReadStreamRef, BlobRef, BlobWriteStreamRef, DatabaseChangeListener, DatabaseRef, DocumentChangeListener, DocumentRef, DocumentReplicationListener, MutableDocumentRef, QueryLanguage, QueryRef, RemoveDatabaseChangeListener, RemoveDocumentChangeListener, RemoveDocumentReplicationListener, RemoveQueryChangeListener, RemoveReplicatorChangeListener, ReplicatorChangeListener, ReplicatorConfiguration, ReplicatorRef, ReplicatorStatus } from 'src/types'
 
   type QueryChangeListener = (results: string) => void
-  type RemoveQueryChangeListener = () => void
-
-  type ReplicatorChangeListener = (status: ReplicatorStatus) => void
-  type RemoveReplicatorChangeListener = () => void
-
-  type DocumentReplicationListener = (
-    direction: 'push' | 'pull',
-    documents: {
-      id: string
-      accessRemoved: boolean
-      deleted: boolean
-      error?: string
-    }[]
-  ) => void
-  type RemoveDocumentReplicationListener = () => void
-
-  enum QueryLanguage {}
 
   const CBLJSONLanguage: QueryLanguage
   const CBLN1QLLanguage: QueryLanguage
@@ -121,11 +30,11 @@ declare module '*couchbaselite.node' {
   function Document_SetJSON<T = unknown>(doc: MutableDocumentRef<T>, value: string): boolean
 
   function Database_CreateQuery<T = unknown, P = Record<string, string>>(database: DatabaseRef, queryLanguage: QueryLanguage, query: string): QueryRef<T, P>
-  function Query_AddChangeListener<T = unknown>(query: QueryRef<T>, handler: QueryChangeListener): RemoveQueryChangeListener
-  function Query_Execute<T = unknown>(query: QueryRef<T>): string
-  function Query_Explain(query: QueryRef): string
-  function Query_Parameters(query: QueryRef): string
-  function Query_SetParameters(query: QueryRef, parametersJSON: string): boolean
+  function Query_AddChangeListener<T = unknown, P = Record<string, string>>(query: QueryRef<T, P>, handler: QueryChangeListener): RemoveQueryChangeListener
+  function Query_Execute<T = unknown, P = Record<string, string>>(query: QueryRef<T, P>): string
+  function Query_Explain<T = unknown, P = Record<string, string>>(query: QueryRef<T, P>): string
+  function Query_Parameters<T = unknown, P = Record<string, string>>(query: QueryRef<T, P>): string
+  function Query_SetParameters<T = unknown, P = Record<string, string>>(query: QueryRef<T, P>, parametersJSON: string): boolean
 
   function Replicator_AddChangeListener(replicator: ReplicatorRef, handler: ReplicatorChangeListener): RemoveReplicatorChangeListener
   function Replicator_AddDocumentReplicationListener(replicator: ReplicatorRef, handler: DocumentReplicationListener): RemoveDocumentReplicationListener

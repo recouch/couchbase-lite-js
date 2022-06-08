@@ -1,37 +1,38 @@
 import { CBL } from '../CBL'
+import { DocumentReplicationListener, RemoveDocumentReplicationListener, RemoveReplicatorChangeListener, ReplicatorChangeListener, ReplicatorConfiguration, ReplicatorRef, ReplicatorStatus } from '../types'
 
-export function addDocumentReplicationListener(replicator: CBL.ReplicatorRef, handler: CBL.DocumentReplicationListener): CBL.RemoveDocumentReplicationListener {
+export function addDocumentReplicationListener(replicator: ReplicatorRef, handler: DocumentReplicationListener): RemoveDocumentReplicationListener {
   return CBL.Replicator_AddDocumentReplicationListener(replicator, handler)
 }
 
-export function addReplicatorChangeListener(replicator: CBL.ReplicatorRef, handler: CBL.ReplicatorChangeListener): CBL.RemoveReplicatorChangeListener {
+export function addReplicatorChangeListener(replicator: ReplicatorRef, handler: ReplicatorChangeListener): RemoveReplicatorChangeListener {
   return CBL.Replicator_AddChangeListener(replicator, handler)
 }
 
-export function createReplicator(config: CBL.ReplicatorConfiguration):CBL.ReplicatorRef {
+export function createReplicator(config: ReplicatorConfiguration): ReplicatorRef {
   return CBL.Replicator_Create(config)
 }
 
-export function documentsPendingReplication(replicator: CBL.ReplicatorRef): string[] {
+export function documentsPendingReplication(replicator: ReplicatorRef): string[] {
   return CBL.Replicator_PendingDocumentIDs(replicator)
 }
 
-export function isDocumentPendingReplication(replicator: CBL.ReplicatorRef, documentID: string): boolean {
+export function isDocumentPendingReplication(replicator: ReplicatorRef, documentID: string): boolean {
   return CBL.Replicator_IsDocumentPending(replicator, documentID)
 }
 
-export function replicatorConfiguration(replicator: CBL.ReplicatorRef): CBL.ReplicatorConfiguration {
+export function replicatorConfiguration(replicator: ReplicatorRef): ReplicatorConfiguration {
   return CBL.Replicator_Config(replicator)
 }
 
-export function startReplicator(replicator: CBL.ReplicatorRef, resetCheckpoint = false): boolean {
+export function startReplicator(replicator: ReplicatorRef, resetCheckpoint = false): boolean {
   return CBL.Replicator_Start(replicator, resetCheckpoint)
 }
 
-export function replicatorStatus(replicator: CBL.ReplicatorRef): CBL.ReplicatorStatus {
+export function replicatorStatus(replicator: ReplicatorRef): ReplicatorStatus {
   return CBL.Replicator_Status(replicator)
 }
 
-export function stopReplicator(replicator: CBL.ReplicatorRef): boolean {
+export function stopReplicator(replicator: ReplicatorRef): boolean {
   return CBL.Replicator_Stop(replicator)
 }

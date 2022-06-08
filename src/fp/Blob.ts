@@ -1,81 +1,82 @@
 import { CBL } from '../CBL'
+import { BlobRef, BlobMetadata, BlobWriteStreamRef, BlobReadStreamRef, DatabaseRef, DocumentRef, MutableDocumentRef } from '../types'
 
-export function blobContent(blob: CBL.BlobRef): Buffer {
+export function blobContent(blob: BlobRef): Buffer {
   return CBL.Blob_Content(blob)
 }
 
-export function blobContentType(blob: CBL.BlobRef): string {
+export function blobContentType(blob: BlobRef): string {
   return CBL.Blob_ContentType(blob)
 }
 
-export function blobCreateJson(blob: CBL.BlobRef): string {
+export function blobCreateJson(blob: BlobRef): string {
   return CBL.Blob_CreateJSON(blob)
 }
 
-export function blobProperties(blob: CBL.BlobRef): CBL.BlobMetadata {
+export function blobProperties(blob: BlobRef): BlobMetadata {
   return JSON.parse(CBL.Blob_CreateJSON(blob))
 }
 
-export function createBlobWithData(contentType: string, buffer: Buffer): CBL.BlobRef {
+export function createBlobWithData(contentType: string, buffer: Buffer): BlobRef {
   return CBL.Blob_CreateWithData(contentType, buffer)
 }
 
-export function createBlobWithStream(contentType: string, stream: CBL.BlobWriteStreamRef): CBL.BlobRef {
+export function createBlobWithStream(contentType: string, stream: BlobWriteStreamRef): BlobRef {
   return CBL.Blob_CreateWithStream(contentType, stream)
 }
 
-export function blobDigest(blob: CBL.BlobRef): string {
+export function blobDigest(blob: BlobRef): string {
   return CBL.Blob_Digest(blob)
 }
 
-export function blobEquals(blob: CBL.BlobRef, anotherBlob: CBL.BlobRef): boolean {
+export function blobEquals(blob: BlobRef, anotherBlob: BlobRef): boolean {
   return CBL.Blob_Equals(blob, anotherBlob)
 }
 
-export function blobLength(blob: CBL.BlobRef): number {
+export function blobLength(blob: BlobRef): number {
   return CBL.Blob_Length(blob)
 }
 
-export function openBlobContentStream(blob: CBL.BlobRef): CBL.BlobReadStreamRef {
+export function openBlobContentStream(blob: BlobRef): BlobReadStreamRef {
   return CBL.Blob_OpenContentStream(blob)
 }
 
-export function closeBlobReader(stream: CBL.BlobReadStreamRef): void {
+export function closeBlobReader(stream: BlobReadStreamRef): void {
   return CBL.BlobReader_Close(stream)
 }
 
-export function readBlobReader(stream: CBL.BlobReadStreamRef, maxLength: number): Buffer {
+export function readBlobReader(stream: BlobReadStreamRef, maxLength: number): Buffer {
   return CBL.BlobReader_Read(stream, maxLength)
 }
 
-export function closeBlobWriter(stream: CBL.BlobWriteStreamRef): void {
+export function closeBlobWriter(stream: BlobWriteStreamRef): void {
   return CBL.BlobWriter_Close(stream)
 }
 
-export function createBlobWriter(database: CBL.DatabaseRef): CBL.BlobWriteStreamRef {
+export function createBlobWriter(database: DatabaseRef): BlobWriteStreamRef {
   return CBL.BlobWriter_Create(database)
 }
 
-export function writeBlobWriter(stream: CBL.BlobWriteStreamRef, buffer: Buffer): boolean {
+export function writeBlobWriter(stream: BlobWriteStreamRef, buffer: Buffer): boolean {
   return CBL.BlobWriter_Write(stream, buffer)
 }
 
-export function databaseGetBlob(database: CBL.DatabaseRef, properties: CBL.BlobMetadata): CBL.BlobRef {
+export function databaseGetBlob(database: DatabaseRef, properties: BlobMetadata): BlobRef {
   return CBL.Database_GetBlob(database, JSON.stringify(properties))
 }
 
-export function databaseSaveBlob(database: CBL.DatabaseRef, blob: CBL.BlobRef): boolean {
+export function databaseSaveBlob(database: DatabaseRef, blob: BlobRef): boolean {
   return CBL.Database_SaveBlob(database, blob)
 }
 
-export function documentGetBlob(doc: CBL.DocumentRef | CBL.MutableDocumentRef, property: string): CBL.BlobRef {
+export function documentGetBlob(doc: DocumentRef | MutableDocumentRef, property: string): BlobRef {
   return CBL.Document_GetBlob(doc, property)
 }
 
-export function documentIsBlob(doc: CBL.DocumentRef | CBL.MutableDocumentRef, property: string): boolean {
+export function documentIsBlob(doc: DocumentRef | MutableDocumentRef, property: string): boolean {
   return CBL.Document_IsBlob(doc, property)
 }
 
-export function documentSetBlob(doc: CBL.MutableDocumentRef, property: string, blob: CBL.BlobRef): void {
+export function documentSetBlob(doc: MutableDocumentRef, property: string, blob: BlobRef): void {
   return CBL.Document_SetBlob(doc, property, blob)
 }
