@@ -20,7 +20,11 @@ static void finalize_blob_read_stream_external(napi_env env, void *data, void *h
 {
   external_blob_read_stream_ref *streamRef = (external_blob_read_stream_ref *)data;
 
-  CBLBlobReader_Close(streamRef->stream);
+  if (streamRef->isOpen)
+  {
+    CBLBlobReader_Close(streamRef->stream);
+  }
+
   free(data);
 }
 
@@ -28,7 +32,11 @@ static void finalize_blob_write_stream_external(napi_env env, void *data, void *
 {
   external_blob_write_stream_ref *streamRef = (external_blob_write_stream_ref *)data;
 
-  CBLBlobWriter_Close(streamRef->stream);
+  if (streamRef->isOpen)
+  {
+    CBLBlobWriter_Close(streamRef->stream);
+  }
+
   free(data);
 }
 
@@ -294,10 +302,16 @@ napi_value BlobReader_Close(napi_env env, napi_callback_info info)
   external_blob_read_stream_ref *streamRef;
   CHECK(napi_get_value_external(env, args[0], (void *)&streamRef));
 
-  CBLBlobReader_Close(streamRef->stream);
-
   napi_value res;
   CHECK(napi_get_undefined(env, &res));
+
+  if (!streamRef->isOpen)
+  {
+    return res;
+  }
+
+  CBLBlobReader_Close(streamRef->stream);
+  streamRef->isOpen = false;
 
   return res;
 }
@@ -408,10 +422,16 @@ napi_value BlobWriter_Close(napi_env env, napi_callback_info info)
   external_blob_write_stream_ref *streamRef;
   CHECK(napi_get_value_external(env, args[0], (void *)&streamRef));
 
-  CBLBlobWriter_Close(streamRef->stream);
-
   napi_value res;
   CHECK(napi_get_undefined(env, &res));
+
+  if (!streamRef->isOpen)
+  {
+    return res;
+  }
+
+  CBLBlobWriter_Close(streamRef->stream);
+  streamRef->isOpen = false;
 
   return res;
 }

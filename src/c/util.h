@@ -21,11 +21,13 @@ typedef struct ExternalBlobRef
 typedef struct ExternalBlobReadStreamRef
 {
   CBLBlobReadStream *stream;
+  bool isOpen;
 } external_blob_read_stream_ref;
 
 typedef struct ExternalBlobWriteStreamRef
 {
   CBLBlobWriteStream *stream;
+  bool isOpen;
 } external_blob_write_stream_ref;
 
 typedef struct ExternalDatabaseRef
@@ -43,6 +45,13 @@ typedef struct ExternalQueryRef
 {
   CBLQuery *query;
 } external_query_ref;
+
+typedef struct ReplicationCallbacks
+{
+  napi_threadsafe_function conflictResolver;
+  napi_threadsafe_function pullFilter;
+  napi_threadsafe_function pushFilter;
+} replication_callbacks;
 
 typedef struct ExternalReplicatorRef
 {
@@ -62,4 +71,7 @@ bool isProd();
 bool isTest();
 char *napiValueToLongString(napi_env env, napi_value value, size_t *str_size);
 void logToFile(char *line);
+void logIntToFile(int32_t line);
+void logFloatToFile(double line);
+void logFLStringToFile(FLString line);
 void throwCBLError(napi_env env, CBLError err);

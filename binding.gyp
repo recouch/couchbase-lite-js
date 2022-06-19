@@ -16,6 +16,7 @@
                 "lib/libcblite-3.0.1/include",
             ],
             "sources": [
+                "src/c/NapiConvert.c",
                 "src/c/Listener.c",
                 "src/c/util.c",
                 "src/c/main.c",

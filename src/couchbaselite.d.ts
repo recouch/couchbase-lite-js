@@ -27,7 +27,9 @@ declare module '*couchbaselite.node' {
   function Document_CreateWithID<T = unknown>(id: string): MutableDocumentRef<T>
   function Document_CreateJSON<T = unknown>(doc: DocumentRef<T> | MutableDocumentRef<T>): string
   function Document_ID(doc: DocumentRef | MutableDocumentRef): string
+  function Document_Properties<T = unknown>(doc: DocumentRef<T> | MutableDocumentRef<T>): T
   function Document_SetJSON<T = unknown>(doc: MutableDocumentRef<T>, value: string): boolean
+  function Document_SetProperties<T = unknown>(doc: MutableDocumentRef<T>, value: T): boolean
 
   function Database_CreateQuery<T = unknown, P = Record<string, string>>(database: DatabaseRef, queryLanguage: QueryLanguage, query: string): QueryRef<T, P>
   function Query_AddChangeListener<T = unknown, P = Record<string, string>>(query: QueryRef<T, P>, handler: QueryChangeListener): RemoveQueryChangeListener
@@ -42,6 +44,7 @@ declare module '*couchbaselite.node' {
   function Replicator_Config(replicator: ReplicatorRef): ReplicatorConfiguration
   function Replicator_IsDocumentPending(replicator: ReplicatorRef, documentID: string): boolean
   function Replicator_PendingDocumentIDs(replicator: ReplicatorRef): string[]
+  function Replicator_SetHostReachable(replicator: ReplicatorRef, reachable: boolean): boolean
   function Replicator_Start(replicator: ReplicatorRef, resetCheckpoint?: boolean): boolean
   function Replicator_Status(replicator: ReplicatorRef): ReplicatorStatus
   function Replicator_Stop(replicator: ReplicatorRef): boolean

@@ -28,9 +28,9 @@ napi_value Listener_Remove(napi_env env, napi_callback_info info)
   return res;
 }
 
-struct StopListenerData *newStopListenerData(napi_threadsafe_function callback, CBLListenerToken *token)
+stop_listener_data *newStopListenerData(napi_threadsafe_function callback, CBLListenerToken *token)
 {
-  struct StopListenerData *stopListenerData = malloc(sizeof(callback) + sizeof(token));
+  stop_listener_data *stopListenerData = malloc(sizeof(callback) + sizeof(token));
   stopListenerData->callback = callback;
   stopListenerData->token = token;
 
@@ -39,7 +39,7 @@ struct StopListenerData *newStopListenerData(napi_threadsafe_function callback, 
 
 napi_value StopChangeListener(napi_env env, napi_callback_info info)
 {
-  struct StopListenerData *data;
+  stop_listener_data *data;
   CHECK(napi_get_cb_info(env, info, NULL, NULL, NULL, (void *)&data));
 
   CBLListener_Remove(data->token);

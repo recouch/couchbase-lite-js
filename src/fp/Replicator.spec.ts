@@ -1,4 +1,5 @@
-import { createServer } from 'http'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
 import { createTestDatabase, timeout } from './test-util'
 import { addReplicatorChangeListener, createReplicator, replicatorConfiguration, replicatorStatus, startReplicator, stopReplicator } from './Replicator'
 import { databaseName } from './Database'
@@ -26,33 +27,22 @@ describe('Replicator', () => {
     cleanup()
   })
 
-  it('tries to connect to a URL endpoint', () =>
-    new Promise<void>(resolve => {
-      const { cleanup, db } = createTestDatabase()
-      const port = getRandomPort()
-      const replicator = createReplicator({ database: db, endpoint: `ws://localhost:${port}/db2` })
-      const server = createServer(req => {
-        stopReplicator(replicator)
+  it('tries to connect to a URL endpoint', async () => {
+    const { cleanup, db } = createTestDatabase()
+    const port = getRandomPort()
+    const replicator = createReplicator({ database: db, endpoint: `ws://localhost:${port}/db2` })
+    const server = createServer((_req, res) => res.end()).listen(port)
+    const handledRequest = once(server, 'request')
 
-        cleanup()
-        server.close()
+    startReplicator(replicator)
 
-        expect(req).toBeTruthy()
+    await expect(handledRequest).resolves.toContainEqual(expect.objectContaining({ url: '/db2/_blipsync' }))
 
-        expect(replicatorStatus(replicator).activity).toBe('stopped')
-        expect(replicatorStatus(replicator).progress.complete).toBe(1)
+    stopReplicator(replicator)
 
-        resolve()
-      })
-
-      server.listen(port)
-      startReplicator(replicator)
-
-      expect(replicatorStatus(replicator).activity).toBe('connecting')
-
-      return timeout(25)
-    })
-  )
+    await new Promise(resolve => server.close(resolve))
+    cleanup()
+  })
 
   describe('addReplicatorChangeListener', () => {
     it('reports status changes', async () => {
@@ -60,19 +50,22 @@ describe('Replicator', () => {
       const port = getRandomPort()
       const replicator = createReplicator({ database: db, endpoint: `ws://localhost:${port}/db3` })
       const replicatorChangeListener = jest.fn()
-      const server = createServer().listen(port)
+      const server = createServer((_req, res) => res.end()).listen(port)
 
-      addReplicatorChangeListener(replicator, replicatorChangeListener)
+      server.on('*', evt => console.log('evt', evt))
+
+      const stop = addReplicatorChangeListener(replicator, replicatorChangeListener)
       startReplicator(replicator)
+      await timeout(50)
 
-      await timeout(25)
-
-      cleanup()
-      server.close()
-
-      await timeout(25)
+      stopReplicator(replicator)
+      await timeout(10)
 
       expect(replicatorChangeListener).toHaveBeenCalledWith(expect.objectContaining({ activity: 'stopped' }))
+
+      await new Promise(resolve => server.close(resolve))
+      stop()
+      cleanup()
     })
   })
 })

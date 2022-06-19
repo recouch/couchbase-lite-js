@@ -24,6 +24,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "bindings": "^1.5.0",
+    "caniuse-lite": "^1.0.30001356",
     "extract-zip": "^2.0.1",
     "got": "^12.1.0",
     "node-gyp": "^9.0.0"
@@ -43,7 +44,7 @@
     "eslint-import-resolver-typescript": "^2.7.1",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-jest": "^26.5.3",
-    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-n": "^15.2.3",
     "eslint-plugin-promise": "^6.0.0",
     "jest": "^28.1.1",
     "nanoid": "^3.1.30",

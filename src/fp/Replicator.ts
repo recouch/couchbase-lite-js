@@ -25,6 +25,10 @@ export function replicatorConfiguration(replicator: ReplicatorRef): ReplicatorCo
   return CBL.Replicator_Config(replicator)
 }
 
+export function setHostReachable(replicator: ReplicatorRef, reachable = true): boolean {
+  return CBL.Replicator_SetHostReachable(replicator, reachable)
+}
+
 export function startReplicator(replicator: ReplicatorRef, resetCheckpoint = false): boolean {
   return CBL.Replicator_Start(replicator, resetCheckpoint)
 }

@@ -2,6 +2,7 @@
 #include <node_api.h>
 #include <stdio.h>
 #include "cbl/CouchbaseLite.h"
+#include "NapiConvert.h"
 #include "Listener.h"
 #include "util.h"
 
@@ -252,6 +253,23 @@ napi_value Document_CreateJSON(napi_env env, napi_callback_info info)
   return json;
 }
 
+// CBLDocument_Properties
+napi_value Document_Properties(napi_env env, napi_callback_info info)
+{
+  size_t argc = 1;
+  napi_value args[1];
+  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+
+  external_document_ref *docRef;
+  CHECK(napi_get_value_external(env, args[0], (void *)&docRef));
+  CBLDocument *doc = docRef->document;
+
+  FLDict properties = CBLDocument_Properties(doc);
+  napi_value res = flDictToNapiValue(env, properties);
+
+  return res;
+}
+
 // CBLDocument_SetJSON
 napi_value Document_SetJSON(napi_env env, napi_callback_info info)
 {
@@ -281,6 +299,28 @@ napi_value Document_SetJSON(napi_env env, napi_callback_info info)
 
   napi_value res;
   CHECK(napi_get_boolean(env, didSetJson, &res));
+
+  return res;
+}
+
+// CBLDocument_SetProperties
+napi_value Document_SetProperties(napi_env env, napi_callback_info info)
+{
+  size_t argc = 2;
+  napi_value args[2];
+  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+
+  external_document_ref *docRef;
+  CHECK(napi_get_value_external(env, args[0], (void *)&docRef));
+  CBLDocument *doc = docRef->document;
+
+  FLMutableDict value = napiValueToFLDict(env, args[1]);
+
+  CBLDocument_SetProperties(doc, value);
+  FLMutableDict_Release(value);
+
+  napi_value res;
+  CHECK(napi_get_boolean(env, true, &res));
 
   return res;
 }

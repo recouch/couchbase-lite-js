@@ -21,8 +21,12 @@ export function getDocumentID(doc: DocumentRef | MutableDocumentRef): string {
   return CBL.Document_ID(doc)
 }
 
+export function getDocumentJSON<T = unknown>(doc: DocumentRef<T> | MutableDocumentRef<T>): string {
+  return CBL.Document_CreateJSON(doc)
+}
+
 export function getDocumentProperties<T = unknown>(doc: DocumentRef<T> | MutableDocumentRef<T>): T {
-  return JSON.parse(CBL.Document_CreateJSON(doc))
+  return CBL.Document_Properties(doc)
 }
 
 export function getMutableDocument<T = unknown>(db: DatabaseRef, id: string): MutableDocumentRef<T> | null {
@@ -33,6 +37,10 @@ export function saveDocument(db: DatabaseRef, doc: MutableDocumentRef): boolean 
   return CBL.Database_SaveDocument(db, doc)
 }
 
+export function setDocumentJSON<T>(doc: MutableDocumentRef<T>, value: string): boolean {
+  return CBL.Document_SetJSON(doc, value)
+}
+
 export function setDocumentProperties<T>(doc: MutableDocumentRef<T>, value: T): boolean {
-  return CBL.Document_SetJSON(doc, JSON.stringify(value))
+  return CBL.Document_SetProperties(doc, value)
 }

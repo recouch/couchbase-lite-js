@@ -7,9 +7,14 @@
 
 static void finalize_replicator_database_external(napi_env env, void *data, void *hint)
 {
-  external_database_ref *databaseRef = (external_database_ref *)data;
+  free(data);
+}
 
-  CBLDatabase_Release(databaseRef->database);
+static void finalize_replicator_document_external(napi_env env, void *data, void *hint)
+{
+  external_document_ref *documentRef = (external_document_ref *)data;
+
+  CBLDocument_Release(documentRef->document);
   free(data);
 }
 
@@ -49,9 +54,8 @@ static napi_value replicator_status_to_napi_object(napi_env env, CBLReplicatorSt
   }
 
   FLSliceResult errorMsg = CBLError_Message(&replicatorStatus.error);
-  char msg[errorMsg.size + 1];
-  assert(FLSlice_ToCString(FLSliceResult_AsSlice(errorMsg), msg, errorMsg.size + 1) == true);
-  CHECK(napi_create_string_utf8(env, msg, NAPI_AUTO_LENGTH, &error))
+  CHECK(napi_create_string_utf8(env, errorMsg.buf, errorMsg.size, &error));
+  FLSliceResult_Release(errorMsg);
 
   CHECK(napi_create_object(env, &progress));
   CHECK(napi_create_double(env, replicatorStatus.progress.complete, &complete));
@@ -70,13 +74,6 @@ static napi_value replicator_status_to_napi_object(napi_env env, CBLReplicatorSt
 // Lifecycle
 
 // CBLReplicator_Create
-
-typedef struct ReplicationCallbacks
-{
-  napi_threadsafe_function conflictResolver;
-  napi_threadsafe_function pullFilter;
-  napi_threadsafe_function pushFilter;
-} replication_callbacks;
 
 typedef struct ConflictResolverDocumentInfo
 {
@@ -118,12 +115,12 @@ static void ConflictResolverCallJS(napi_env env, napi_value js_cb, void *context
 
   napi_value localDocument;
   external_document_ref *localDocumentRef = createExternalDocumentRef((CBLDocument *)docInfo.localDocument);
-  CHECK(napi_create_external(env, localDocumentRef, finalize_replicator_database_external, NULL, &localDocument));
+  CHECK(napi_create_external(env, localDocumentRef, finalize_replicator_document_external, NULL, &localDocument));
   CHECK(napi_set_named_property(env, res, "localDocument", localDocument));
 
   napi_value remoteDocument;
   external_document_ref *remoteDocumentRef = createExternalDocumentRef((CBLDocument *)docInfo.remoteDocument);
-  CHECK(napi_create_external(env, remoteDocumentRef, finalize_replicator_database_external, NULL, &remoteDocument));
+  CHECK(napi_create_external(env, remoteDocumentRef, finalize_replicator_document_external, NULL, &remoteDocument));
   CHECK(napi_set_named_property(env, res, "remoteDocument", remoteDocument));
 
   args[0] = res;
@@ -181,7 +178,7 @@ static void ReplicationFilterCallJS(napi_env env, napi_value js_cb, void *contex
 
   napi_value document;
   external_document_ref *documentRef = createExternalDocumentRef(replicationFilterData.document);
-  CHECK(napi_create_external(env, documentRef, finalize_replicator_database_external, NULL, &document));
+  CHECK(napi_create_external(env, documentRef, finalize_replicator_document_external, NULL, &document));
   CHECK(napi_set_named_property(env, res, "document", document));
 
   napi_value replicatedDocumentDeleted;
@@ -501,7 +498,7 @@ napi_value Replicator_Start(napi_env env, napi_callback_info info)
   CBLReplicator_Start(replicatorRef->replicator, resetCheckpoint);
 
   napi_value res;
-  CHECK(napi_get_boolean(env, true, &res));
+  CHECK(napi_get_undefined(env, &res));
 
   return res;
 }
@@ -519,7 +516,7 @@ napi_value Replicator_Stop(napi_env env, napi_callback_info info)
   CBLReplicator_Stop(replicatorRef->replicator);
 
   napi_value res;
-  CHECK(napi_get_boolean(env, true, &res));
+  CHECK(napi_get_undefined(env, &res));
 
   return res;
 }
@@ -789,6 +786,7 @@ static void DocumentReplicationListenerCallJS(napi_env env, napi_value js_cb, vo
 
       CHECK(napi_create_string_utf8(env, errorMsg.buf, errorMsg.size, &napiErrorMsg));
       CHECK(napi_set_named_property(env, replicatedDocument, "error", napiErrorMsg));
+      FLSliceResult_Release(errorMsg);
     }
 
     CHECK(napi_set_element(env, args[1], i, replicatedDocument));

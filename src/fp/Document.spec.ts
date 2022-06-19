@@ -1,11 +1,11 @@
 import { closeDatabase } from './Database'
-import { addDocumentChangeListener, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentProperties, getMutableDocument, saveDocument, setDocumentProperties } from './Document'
+import { addDocumentChangeListener, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentJSON, getDocumentProperties, getMutableDocument, saveDocument, setDocumentJSON, setDocumentProperties } from './Document'
 import { createTestDatabase } from './test-util'
 
 describe('document functions', () => {
   describe('addDocumentChangeListener', () => {
     it('listens to document changes', async () => {
-      const { cleanup, db } = createTestDatabase({ testDoc: { children: 1 } })
+      const { cleanup, db } = createTestDatabase({ testDoc: { children: 1, parents: 2 } })
       const doc = getMutableDocument(db, 'testDoc')!
       const fn = jest.fn()
       const stop = addDocumentChangeListener(db, 'testDoc', fn)
@@ -104,22 +104,108 @@ describe('document functions', () => {
   })
 
   describe('getDocumentID', () => {
-    it('returns the ID of the document', () => {})
+    it('returns the ID of the document', () => {
+      const { cleanup, db } = createTestDatabase({ child: {} })
+    
+      const doc = getDocument(db, 'child')!
+      expect(getDocumentID(doc)).toBe('child')
+
+      cleanup()
+    })
+  })
+
+  describe('getDocumentJSON', () => {
+    it('returns the data of the document as JSON', () => {
+      const { cleanup, db } = createTestDatabase({ person: { children: 2 } })
+    
+      const doc = getDocument(db, 'person')!
+      expect(getDocumentJSON(doc)).toBe('{"children":2}')
+
+      cleanup()
+    })
   })
 
   describe('getDocumentProperties', () => {
-    it('returns the data of the document', () => {})
-  })
+    it('returns the data of the document', () => {
+      const { cleanup, db } = createTestDatabase({ person: { children: 2 } })
+    
+      const doc = getDocument(db, 'person')!
+      expect(getDocumentProperties(doc)).toEqual({ children: 2 })
 
-  describe('getMutableDocument', () => {
-    it('gets a mutable document by ID from the database', () => {})
-  })
+      cleanup()
+    })
 
-  describe('saveDocument', () => {
-    it('saves a mutable document', () => {})
+    it('returns complex documents exactly as saved', () => {
+      const person = {
+        name: 'Stella Wade',
+        active: true,
+        age: 42,
+        height: 5.4,
+        favoriteNumber: BigInt(Number.MAX_SAFE_INTEGER) * BigInt(2),
+        children: [
+          true,
+          false,
+          BigInt('0o377777777777777777'),
+          {
+            name: 'Polly Todd',
+            age: 12,
+          },
+          {
+            name: 'Ella Todd',
+            age: 16,
+          },
+          'Beatrice Baker',
+          5,
+          6.6
+        ],
+        spouse: {
+          name: 'Ronald Todd',
+          active: false,
+          age: 43
+        }
+      }
+      const { cleanup, db } = createTestDatabase({ person })
+
+      const doc = getDocument(db, 'person')!
+      expect(getDocumentProperties(doc)).toEqual(person)
+
+      cleanup()
+    })
   })
 
   describe('setDocumentProperties', () => {
-    it('sets the data of a mutable document', () => {})
+    it('sets the data of a mutable document with an object', () => {
+      const { cleanup, db } = createTestDatabase({ child: {} })
+    
+      const doc = getMutableDocument(db, 'child')!
+      setDocumentProperties(doc, { name: 'blossom' })
+      
+      expect(getDocumentProperties(doc)).toEqual({ name: 'blossom' })
+
+      cleanup()
+    })
+
+    it('sets the data of a mutable document with an array', () => {
+      const { cleanup, db } = createTestDatabase({ child: {} })
+    
+      const doc = getMutableDocument(db, 'child')!
+      setDocumentProperties(doc, [{ name: 'blossom' }])
+      
+      expect(getDocumentProperties(doc)).toEqual({ 0: { name: 'blossom' } })
+
+      cleanup()
+    })
+  })
+
+  describe('setDocumentJSON', () => {
+    it('sets the data of a mutable document with a JSON string', () => {
+      const { cleanup, db } = createTestDatabase({ child: {} })
+    
+      const doc = getMutableDocument(db, 'child')!
+      setDocumentJSON(doc, '{ "name": "blossom" }')
+      
+      expect(getDocumentProperties(doc)).toEqual({ name: 'blossom' })
+
+      cleanup()})
   })
 })

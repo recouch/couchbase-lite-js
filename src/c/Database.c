@@ -73,7 +73,7 @@ napi_value Database_Close(napi_env env, napi_callback_info info)
   CBLError err;
 
   napi_value res;
-  napi_get_boolean(env, false, &res);
+  CHECK(napi_get_boolean(env, false, &res));
 
   size_t argc = 1;
   napi_value args[1];
@@ -81,6 +81,12 @@ napi_value Database_Close(napi_env env, napi_callback_info info)
 
   external_database_ref *databaseRef;
   CHECK(napi_get_value_external(env, args[0], (void *)&databaseRef));
+
+  if (!databaseRef->isOpen)
+  {
+    CHECK(napi_get_boolean(env, true, &res));
+    return res;
+  }
 
   bool didClose = CBLDatabase_Close(databaseRef->database, &err);
 
@@ -101,7 +107,7 @@ napi_value Database_Close(napi_env env, napi_callback_info info)
 napi_value Database_Delete(napi_env env, napi_callback_info info)
 {
   napi_value res;
-  napi_get_boolean(env, false, &res);
+  CHECK(napi_get_boolean(env, false, &res));
 
   size_t argc = 1;
   napi_value args[1];
@@ -163,7 +169,7 @@ napi_value DeleteDatabase(napi_env env, napi_callback_info info)
 napi_value Database_BeginTransaction(napi_env env, napi_callback_info info)
 {
   napi_value res;
-  napi_get_boolean(env, false, &res);
+  CHECK(napi_get_boolean(env, false, &res));
 
   size_t argc = 1;
   napi_value args[1];
@@ -181,7 +187,7 @@ napi_value Database_BeginTransaction(napi_env env, napi_callback_info info)
     return NULL;
   }
 
-  napi_get_boolean(env, true, &res);
+  CHECK(napi_get_boolean(env, true, &res));
   return res;
 }
 
@@ -189,7 +195,7 @@ napi_value Database_BeginTransaction(napi_env env, napi_callback_info info)
 napi_value Database_EndTransaction(napi_env env, napi_callback_info info)
 {
   napi_value res;
-  napi_get_boolean(env, false, &res);
+  CHECK(napi_get_boolean(env, false, &res));
 
   size_t argc = 2;
   napi_value args[2];
@@ -210,7 +216,7 @@ napi_value Database_EndTransaction(napi_env env, napi_callback_info info)
     return NULL;
   }
 
-  napi_get_boolean(env, true, &res);
+  CHECK(napi_get_boolean(env, true, &res));
   return res;
 }
 
@@ -218,7 +224,7 @@ napi_value Database_EndTransaction(napi_env env, napi_callback_info info)
 napi_value Database_Name(napi_env env, napi_callback_info info)
 {
   napi_value res;
-  napi_get_boolean(env, false, &res);
+  CHECK(napi_get_boolean(env, false, &res));
 
   size_t argc = 1;
   napi_value args[1];
@@ -237,7 +243,7 @@ napi_value Database_Name(napi_env env, napi_callback_info info)
 napi_value Database_Path(napi_env env, napi_callback_info info)
 {
   napi_value res;
-  napi_get_boolean(env, false, &res);
+  CHECK(napi_get_boolean(env, false, &res));
 
   size_t argc = 1;
   napi_value args[1];

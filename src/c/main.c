@@ -42,7 +42,9 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Document_CreateWithID", Document_CreateWithID),
       DECLARE_NAPI_METHOD("Document_CreateJSON", Document_CreateJSON),
       DECLARE_NAPI_METHOD("Document_ID", Document_ID),
+      DECLARE_NAPI_METHOD("Document_Properties", Document_Properties),
       DECLARE_NAPI_METHOD("Document_SetJSON", Document_SetJSON),
+      DECLARE_NAPI_METHOD("Document_SetProperties", Document_SetProperties),
 
       // Query
       DECLARE_NAPI_METHOD("Database_CreateQuery", Database_CreateQuery),
@@ -59,6 +61,7 @@ NAPI_MODULE_INIT(/* env, exports */)
       DECLARE_NAPI_METHOD("Replicator_Config", Replicator_Config),
       DECLARE_NAPI_METHOD("Replicator_IsDocumentPending", Replicator_IsDocumentPending),
       DECLARE_NAPI_METHOD("Replicator_PendingDocumentIDs", Replicator_PendingDocumentIDs),
+      DECLARE_NAPI_METHOD("Replicator_SetHostReachable", Replicator_SetHostReachable),
       DECLARE_NAPI_METHOD("Replicator_Start", Replicator_Start),
       DECLARE_NAPI_METHOD("Replicator_Status", Replicator_Status),
       DECLARE_NAPI_METHOD("Replicator_Stop", Replicator_Stop),

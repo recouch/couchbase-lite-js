@@ -148,7 +148,7 @@ describe('Blob', () => {
     })
   })
 
-  describe('documentSetBlob & documentGetBlob', () => {
+  describe('documentSetBlob/documentGetBlob', () => {
     it('sets and gets the blob from a document', async () => {
       const { cleanup, db } = createTestDatabase()
 

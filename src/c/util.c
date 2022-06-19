@@ -30,6 +30,7 @@ external_blob_read_stream_ref *createExternalBlobReadStreamRef(CBLBlobReadStream
 {
   external_blob_read_stream_ref *streamRef = malloc(sizeof(*streamRef));
   streamRef->stream = stream;
+  streamRef->isOpen = true;
 
   return streamRef;
 }
@@ -38,6 +39,7 @@ external_blob_write_stream_ref *createExternalBlobWriteStreamRef(CBLBlobWriteStr
 {
   external_blob_write_stream_ref *streamRef = malloc(sizeof(*streamRef));
   streamRef->stream = stream;
+  streamRef->isOpen = true;
 
   return streamRef;
 }
@@ -92,12 +94,12 @@ bool isTest()
 
 char *napiValueToLongString(napi_env env, napi_value value, size_t *str_size)
 {
-  napi_get_value_string_utf8(env, value, NULL, 0, &str_size);
+  CHECK(napi_get_value_string_utf8(env, value, NULL, 0, str_size));
 
   char *res;
-  res = (char *)calloc(str_size + 1, sizeof(char));
+  res = (char *)calloc(*str_size + 1, sizeof(char));
   str_size = str_size + 1;
-  napi_get_value_string_utf8(env, value, res, str_size, NULL);
+  CHECK(napi_get_value_string_utf8(env, value, res, *str_size, NULL));
 
   return res;
 }
@@ -106,7 +108,31 @@ void logToFile(char *line)
 {
   FILE *f;
   f = fopen("test.log", "a+");
-  fprintf(f, "%s", line);
+  fprintf(f, "%s\n", line);
+  fclose(f);
+}
+
+void logIntToFile(int32_t line)
+{
+  FILE *f;
+  f = fopen("test.log", "a+");
+  fprintf(f, "%i\n", line);
+  fclose(f);
+}
+
+void logFloatToFile(double line)
+{
+  FILE *f;
+  f = fopen("test.log", "a+");
+  fprintf(f, "%f\n", line);
+  fclose(f);
+}
+
+void logFLStringToFile(FLString line)
+{
+  FILE *f;
+  f = fopen("test.log", "a+");
+  fprintf(f, "%.*s\n", (int)line.size, (char *)line.buf);
   fclose(f);
 }
 
