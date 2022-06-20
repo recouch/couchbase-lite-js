@@ -1,8 +1,7 @@
 import { once } from 'node:events'
 import { createServer } from 'node:http'
+import { databaseName, addReplicatorChangeListener, createReplicator, replicatorConfiguration, replicatorStatus, startReplicator, stopReplicator } from '../cblite'
 import { createTestDatabase, timeout } from './test-util'
-import { addReplicatorChangeListener, createReplicator, replicatorConfiguration, replicatorStatus, startReplicator, stopReplicator } from './Replicator'
-import { databaseName } from './Database'
 
 function getRandomInt(min: number, max: number) {
   min = Math.ceil(min)
@@ -59,7 +58,7 @@ describe('Replicator', () => {
       await timeout(50)
 
       stopReplicator(replicator)
-      await timeout(10)
+      await timeout(50)
 
       expect(replicatorChangeListener).toHaveBeenCalledWith(expect.objectContaining({ activity: 'stopped' }))
 

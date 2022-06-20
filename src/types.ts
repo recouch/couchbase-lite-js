@@ -11,6 +11,9 @@ export interface BlobWriteStreamRef extends Symbol {
   type: 'BlobWriteStream'
 }
 
+/**
+ * Opaque reference to a database, as returned by {@link https://docs.couchbase.com/mobile/3.0.0-beta02/couchbase-lite-c/C/html/group__database.html#ga7c119edb784a630c2de21806db4d4e4d}.
+ */
 export interface DatabaseRef extends Symbol {
   type: 'Database'
 }

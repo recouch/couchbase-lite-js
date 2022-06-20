@@ -1,9 +1,83 @@
-import { BlobMetadata, BlobReadStreamRef, BlobRef, BlobWriteStreamRef, DatabaseChangeListener, DatabaseRef, DocumentChangeListener, DocumentRef, DocumentReplicationListener, MutableDocumentRef, QueryChangeListener, QueryRef, RemoveDatabaseChangeListener, RemoveDocumentChangeListener, RemoveDocumentReplicationListener, RemoveQueryChangeListener, RemoveReplicatorChangeListener, ReplicatorChangeListener, ReplicatorConfiguration, ReplicatorRef, ReplicatorStatus } from '../types'
-import { blobContent, blobContentType, blobCreateJson, blobProperties, blobDigest, blobEquals, blobLength, openBlobContentStream, closeBlobReader, readBlobReader, writeBlobWriter, closeBlobWriter, createBlobWriter, databaseGetBlob, databaseSaveBlob, createBlobWithStream, documentGetBlob, documentIsBlob, documentSetBlob } from './Blob'
-import { abortTransaction, addDatabaseChangeListener, beginTransaction, closeDatabase, commitTransaction, databaseName, databasePath, deleteDatabase, endTransaction } from './Database'
-import { addDocumentChangeListener, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentProperties, getMutableDocument, saveDocument, setDocumentProperties } from './Document'
-import { addQueryChangeListener, createQuery, executeQuery, explainQuery, getQueryParameters, setQueryParameters } from './Query'
-import { addReplicatorChangeListener, addDocumentReplicationListener, replicatorConfiguration, isDocumentPendingReplication, documentsPendingReplication, startReplicator, replicatorStatus, stopReplicator, createReplicator } from './Replicator'
+import {
+  BlobMetadata,
+  BlobReadStreamRef,
+  BlobRef,
+  BlobWriteStreamRef,
+  DatabaseChangeListener,
+  DatabaseRef,
+  DocumentChangeListener,
+  DocumentRef,
+  DocumentReplicationListener,
+  MutableDocumentRef,
+  QueryChangeListener,
+  QueryLanguage,
+  QueryRef,
+  RemoveDatabaseChangeListener,
+  RemoveDocumentChangeListener,
+  RemoveDocumentReplicationListener,
+  RemoveQueryChangeListener,
+  RemoveReplicatorChangeListener,
+  ReplicatorChangeListener,
+  ReplicatorConfiguration,
+  ReplicatorRef,
+  ReplicatorStatus
+} from '../types'
+import {
+  addDatabaseChangeListener,
+  addDocumentChangeListener,
+  addDocumentReplicationListener,
+  addQueryChangeListener,
+  addReplicatorChangeListener,
+  beginTransaction,
+  blobContent,
+  blobContentType,
+  blobCreateJson,
+  blobDigest,
+  blobEquals,
+  blobLength,
+  blobProperties,
+  closeBlobReader,
+  closeBlobWriter,
+  closeDatabase,
+  createBlobWithStream,
+  createBlobWriter,
+  createDocument,
+  createQuery,
+  createReplicator,
+  databaseGetBlob,
+  databaseName,
+  databasePath,
+  databaseSaveBlob,
+  deleteDatabase,
+  deleteDocument,
+  documentGetBlob,
+  documentIsBlob,
+  documentSetBlob,
+  documentsPendingReplication,
+  endTransaction,
+  executeQuery,
+  explainQuery,
+  getDocument,
+  getDocumentID,
+  getDocumentProperties,
+  getMutableDocument,
+  getQueryParameters,
+  isDocumentPendingReplication,
+  openBlobContentStream,
+  readBlobReader,
+  replicatorConfiguration,
+  replicatorStatus,
+  saveDocument,
+  setDocumentProperties,
+  setQueryParameters,
+  startReplicator,
+  stopReplicator,
+  writeBlobWriter
+} from '../cblite'
+import {
+  abortTransaction,
+  commitTransaction
+} from './Database'
 
 export interface ScopedBlobReadStream {
   close: () => void
@@ -45,7 +119,7 @@ export interface ScopedQuery<T = unknown[], P = Record<string, string>> {
   execute: () => T[]
   explain: () => string
   getParameters: () => Partial<P>
-  setParameters: (parameters: Partial<P>) => boolean
+  setParameters: (parameters: Partial<P>) => void
 }
 
 export interface ScopedBlobWriteStream {
@@ -89,7 +163,10 @@ export interface ScopedDatabase {
   getMutableDocument: <T = unknown>(id: string) => ScopedMutableDocument<T>|null
 
   // Query methods
-  createQuery: <T = unknown[], P = Record<string, string>>(query: string | unknown[]) => ScopedQuery<T, P>,
+  createQuery<T = unknown, P = Record<string, string>>(query: string): ScopedQuery<T, P>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  createQuery<T = unknown, P = Record<string, string>>(query: any[]): ScopedQuery<T, P>
+  createQuery<T = unknown, P = Record<string, string>>(queryLanguage: QueryLanguage, query: string): ScopedQuery<T, P>
 
   // Replicator methods
   createReplicator: (config: Omit<ReplicatorConfiguration, 'database'>) => ScopedReplicator
@@ -141,7 +218,8 @@ export const scopeDatabase = (dbRef: DatabaseRef): ScopedDatabase => ({
   getMutableDocument: <T = unknown>(id: string) => scopeMutableDocument<T>(dbRef, getMutableDocument(dbRef, id)),
 
   // Query methods
-  createQuery: <T = unknown[], P = Record<string, string>>(query: string | unknown[]) => scopeQuery(createQuery<T, P>(dbRef, query)),
+  createQuery: (<T = unknown[], P = Record<string, string>>(...args: Parameters<ScopedDatabase['createQuery']>) =>
+    scopeQuery(createQuery<T, P>(dbRef, ...args))) as ScopedDatabase['createQuery'],
 
   // Replicator methods
   createReplicator: (config: Omit<ReplicatorConfiguration, 'database'>) => scopeReplicator(createReplicator({ ...config, database: dbRef }))

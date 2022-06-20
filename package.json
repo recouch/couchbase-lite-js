@@ -8,6 +8,7 @@
     "build:ts": "rm -rf ./dist && tsc -p tsconfig.lib.json",
     "build": "npm run build:c && npm run build:ts",
     "build-for-electron": "./build-for-electron.sh",
+    "docs": "typedoc src/index.ts",
     "fetch-source": "node ./fetch-source",
     "install": "echo 'no install'",
     "rebuild": "node-gyp rebuild",
@@ -34,6 +35,7 @@
     "@types/extract-zip": "^2.0.1",
     "@types/got": "^9.6.12",
     "@types/jest": "^28.1.1",
+    "@types/lodash": "^4.14.182",
     "@types/nanoid": "^3.0.0",
     "@types/typescript": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
@@ -47,10 +49,12 @@
     "eslint-plugin-n": "^15.2.3",
     "eslint-plugin-promise": "^6.0.0",
     "jest": "^28.1.1",
+    "lodash": "^4.17.21",
     "nanoid": "^3.1.30",
     "prettier": "^2.6.2",
     "ts-jest": "^28.0.4",
     "ts-node": "^10.8.1",
+    "typedoc": "^0.22.17",
     "typescript": "^4.7.3"
   }
 }

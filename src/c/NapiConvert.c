@@ -53,9 +53,7 @@ FLString napiValueToFLString(napi_env env, napi_value value)
   string = (char *)calloc(str_size, sizeof(char));
   CHECK(napi_get_value_string_utf8(env, value, string, str_size, NULL));
 
-  FLString res = FLStr(string);
-
-  return res;
+  return FLStr(string);
 }
 
 FLMutableDict napiValueToFLDict(napi_env env, napi_value object)

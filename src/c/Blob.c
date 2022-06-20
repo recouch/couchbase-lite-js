@@ -2,6 +2,7 @@
 #include <node_api.h>
 #include <stdio.h>
 #include "cbl/CouchbaseLite.h"
+#include "NapiConvert.h"
 #include "util.h"
 
 static void finalize_blob_external(napi_env env, void *data, void *hint)
@@ -200,6 +201,23 @@ napi_value Blob_CreateJSON(napi_env env, napi_callback_info info)
   napi_value res;
   CHECK(napi_create_string_utf8(env, json.buf, json.size, &res));
   FLSliceResult_Release(json);
+
+  return res;
+}
+
+// CBLBlob_Properties
+napi_value Blob_Properties(napi_env env, napi_callback_info info)
+{
+  size_t argc = 1;
+  napi_value args[argc];
+
+  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+
+  external_blob_ref *blobRef;
+  CHECK(napi_get_value_external(env, args[0], (void *)&blobRef));
+
+  FLDict properties = CBLBlob_Properties(blobRef->blob);
+  napi_value res = flDictToNapiValue(env, properties);
 
   return res;
 }
@@ -471,27 +489,9 @@ napi_value Database_GetBlob(napi_env env, napi_callback_info info)
   external_database_ref *databaseRef;
   CHECK(napi_get_value_external(env, args[0], (void *)&databaseRef));
 
-  size_t str_size;
-  napi_get_value_string_utf8(env, args[1], NULL, 0, &str_size);
-  char *json;
-  json = (char *)calloc(str_size + 1, sizeof(char));
-  str_size = str_size + 1;
-  napi_get_value_string_utf8(env, args[1], json, str_size, NULL);
-
-  FLDoc propertiesDoc = FLDoc_FromJSON(FLStr(json), NULL);
+  FLDict properties = napiValueToFLDict(env, args[1]);
 
   napi_value res;
-
-  if (!propertiesDoc)
-  {
-    assert(napi_throw_error(env, "", "Invalid JSON") == napi_ok);
-
-    CHECK(napi_get_undefined(env, &res));
-
-    return res;
-  }
-
-  FLDict properties = FLValue_AsDict(FLDoc_GetRoot(propertiesDoc));
   CBLError err;
   const CBLBlob *blob = CBLDatabase_GetBlob(databaseRef->database, properties, &err);
 

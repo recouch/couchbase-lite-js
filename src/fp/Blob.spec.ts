@@ -1,5 +1,28 @@
-import { blobContent, blobContentType, blobCreateJson, blobDigest, blobEquals, blobLength, closeBlobReader, closeBlobWriter, readBlobReader, openBlobContentStream, blobProperties, createBlobWithData, createBlobWithStream, createBlobWriter, databaseGetBlob, databaseSaveBlob, writeBlobWriter, documentSetBlob, documentIsBlob, documentGetBlob } from './Blob'
-import { createDocument, getDocument, saveDocument } from './Document'
+import {
+  createDocument,
+  getDocument,
+  saveDocument,
+  blobContent,
+  blobContentType,
+  blobCreateJson,
+  blobProperties,
+  blobDigest,
+  blobEquals,
+  blobLength,
+  closeBlobReader,
+  closeBlobWriter,
+  readBlobReader,
+  openBlobContentStream,
+  createBlobWithData,
+  createBlobWithStream,
+  createBlobWriter,
+  databaseGetBlob,
+  databaseSaveBlob,
+  writeBlobWriter,
+  documentSetBlob,
+  documentIsBlob,
+  documentGetBlob
+} from '../cblite'
 import { createTestDatabase, timeout } from './test-util'
 
 describe('Blob', () => {

@@ -1,8 +1,23 @@
 import fs from 'fs'
 import { join } from 'path'
 import { nanoid } from 'nanoid'
-import { abortTransaction, addDatabaseChangeListener, beginTransaction, closeDatabase, commitTransaction, databaseName, databasePath, deleteDatabase, deleteDatabaseByName, endTransaction, openDatabase } from './Database'
-import { createDocument, getDocument, getDocumentID, getDocumentProperties, saveDocument, setDocumentProperties } from './Document'
+import {
+  addDatabaseChangeListener,
+  beginTransaction,
+  closeDatabase,
+  databaseName,
+  databasePath,
+  deleteDatabase,
+  endTransaction,
+  openDatabase,
+  createDocument,
+  getDocument,
+  getDocumentID,
+  getDocumentProperties,
+  saveDocument,
+  setDocumentProperties
+} from '../cblite'
+import { abortTransaction, commitTransaction } from './Database'
 import { createTestDatabase, testDirectory } from './test-util'
 
 describe('database functions', () => {
@@ -48,7 +63,7 @@ describe('database functions', () => {
   })
 
   describe('deleteDatabase', () => {
-    it('deletes the database', () => {
+    it('deletes the database by reference', () => {
       const { cleanup, db, dbPath } = createTestDatabase()
 
       expect(deleteDatabase(db)).toBe(true)
@@ -65,28 +80,26 @@ describe('database functions', () => {
 
       cleanup()
     })
-  })
 
-  describe('deleteDatabaseByName', () => {
-    it('deletes the database', () => {
+    it('deletes the database by name', () => {
       const { cleanup, dbName, dbPath, db } = createTestDatabase()
 
       closeDatabase(db)
       expect(fs.existsSync(dbPath)).toBe(true)
-      expect(deleteDatabaseByName(dbName, testDirectory)).toBe(true)
+      expect(deleteDatabase(dbName, testDirectory)).toBe(true)
       expect(fs.existsSync(dbPath)).toBe(false)
 
       cleanup()
     })
 
     it('does not throw when database does not exist', () => {
-      expect(deleteDatabaseByName(`non-existent-db-${nanoid()}`, testDirectory)).toBe(true)
+      expect(deleteDatabase(`non-existent-db-${nanoid()}`, testDirectory)).toBe(true)
     })
 
-    it('throws an error when the database is still open', () => {
+    it('throws an error when the database is still open and trying to delete it by name', () => {
       const { cleanup, dbName, dbPath } = createTestDatabase()
 
-      expect(() => deleteDatabaseByName(dbName, testDirectory)).toThrowError("Can't delete db file while other connections are open. The open connections are tagged appOpened.")
+      expect(() => deleteDatabase(dbName, testDirectory)).toThrowError("Can't delete db file while other connections are open. The open connections are tagged appOpened.")
       expect(fs.existsSync(dbPath)).toBe(true)
 
       cleanup()

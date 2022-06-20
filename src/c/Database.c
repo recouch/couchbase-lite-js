@@ -109,58 +109,72 @@ napi_value Database_Delete(napi_env env, napi_callback_info info)
   napi_value res;
   CHECK(napi_get_boolean(env, false, &res));
 
-  size_t argc = 1;
-  napi_value args[1];
-  CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
-
-  external_database_ref *databaseRef;
-  CHECK(napi_get_value_external(env, args[0], (void *)&databaseRef));
-
-  CBLError err;
-  bool didClose = CBLDatabase_Delete(databaseRef->database, &err);
-  CHECK(napi_get_boolean(env, didClose, &res));
-
-  if (didClose)
-  {
-    databaseRef->isOpen = false;
-  }
-  else
-  {
-    throwCBLError(env, err);
-  }
-
-  return res;
-}
-
-// CBL_DeleteDatabase
-napi_value DeleteDatabase(napi_env env, napi_callback_info info)
-{
   size_t argc = 2;
   napi_value args[argc];
 
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
-  assertType(env, args[0], napi_string, "Wrong arguments: database name must be a string");
 
-  size_t buffer_size = 128;
-  char dbName[buffer_size];
-  napi_get_value_string_utf8(env, args[0], dbName, buffer_size, NULL);
+  napi_valuetype args0Type;
+  CHECK(napi_typeof(env, args[0], &args0Type));
 
-  assertType(env, args[1], napi_string, "Wrong arguments: directory must be a string");
-
-  char directory[buffer_size];
-  napi_get_value_string_utf8(env, args[1], directory, buffer_size, NULL);
-
-  bool deleted;
-  CBLError err;
-  deleted = CBL_DeleteDatabase(FLStr(dbName), FLStr(directory), &err);
-
-  if (!deleted)
+  if (args0Type == napi_external)
   {
-    throwCBLError(env, err);
-  }
+    if (argc > 1)
+    {
+      CHECK(napi_throw_error(env, "", "Wrong arguments: Only one argument is expected when a database reference is passed"));
+      return res;
+    }
 
-  napi_value res;
-  CHECK(napi_get_boolean(env, deleted, &res));
+    size_t argc = 1;
+    napi_value args[1];
+    CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
+
+    external_database_ref *databaseRef;
+    CHECK(napi_get_value_external(env, args[0], (void *)&databaseRef));
+
+    CBLError err;
+    bool didDelete = CBLDatabase_Delete(databaseRef->database, &err);
+    CHECK(napi_get_boolean(env, didDelete, &res));
+
+    if (didDelete)
+    {
+      databaseRef->isOpen = false;
+    }
+    else
+    {
+      throwCBLError(env, err);
+    }
+  }
+  else if (args0Type == napi_string)
+  {
+    if (argc != 2)
+    {
+      CHECK(napi_throw_error(env, "", "Wrong arguments: Two arguments are expected when deleting a database by name"));
+      return res;
+    }
+
+    size_t buffer_size = 128;
+    char dbName[buffer_size];
+    napi_get_value_string_utf8(env, args[0], dbName, buffer_size, NULL);
+
+    assertType(env, args[1], napi_string, "Wrong arguments: directory must be a string");
+
+    char directory[buffer_size];
+    napi_get_value_string_utf8(env, args[1], directory, buffer_size, NULL);
+
+    CBLError err;
+    bool didDelete = CBL_DeleteDatabase(FLStr(dbName), FLStr(directory), &err);
+
+    if (!didDelete)
+    {
+      throwCBLError(env, err);
+    }
+    CHECK(napi_get_boolean(env, didDelete, &res));
+  }
+  else
+  {
+    CHECK(napi_throw_error(env, "", "Wrong arguments: database must be a database reference or a string"));
+  }
 
   return res;
 }

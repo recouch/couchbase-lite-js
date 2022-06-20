@@ -1,5 +1,4 @@
-import { closeDatabase } from './Database'
-import { addDocumentChangeListener, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentJSON, getDocumentProperties, getMutableDocument, saveDocument, setDocumentJSON, setDocumentProperties } from './Document'
+import { closeDatabase, addDocumentChangeListener, createDocument, deleteDocument, getDocument, getDocumentID, getDocumentJSON, getDocumentProperties, getMutableDocument, saveDocument, setDocumentJSON, setDocumentProperties } from '../cblite'
 import { createTestDatabase } from './test-util'
 
 describe('document functions', () => {
@@ -106,7 +105,7 @@ describe('document functions', () => {
   describe('getDocumentID', () => {
     it('returns the ID of the document', () => {
       const { cleanup, db } = createTestDatabase({ child: {} })
-    
+
       const doc = getDocument(db, 'child')!
       expect(getDocumentID(doc)).toBe('child')
 
@@ -117,7 +116,7 @@ describe('document functions', () => {
   describe('getDocumentJSON', () => {
     it('returns the data of the document as JSON', () => {
       const { cleanup, db } = createTestDatabase({ person: { children: 2 } })
-    
+
       const doc = getDocument(db, 'person')!
       expect(getDocumentJSON(doc)).toBe('{"children":2}')
 
@@ -128,7 +127,7 @@ describe('document functions', () => {
   describe('getDocumentProperties', () => {
     it('returns the data of the document', () => {
       const { cleanup, db } = createTestDatabase({ person: { children: 2 } })
-    
+
       const doc = getDocument(db, 'person')!
       expect(getDocumentProperties(doc)).toEqual({ children: 2 })
 
@@ -148,11 +147,11 @@ describe('document functions', () => {
           BigInt('0o377777777777777777'),
           {
             name: 'Polly Todd',
-            age: 12,
+            age: 12
           },
           {
             name: 'Ella Todd',
-            age: 16,
+            age: 16
           },
           'Beatrice Baker',
           5,
@@ -176,10 +175,10 @@ describe('document functions', () => {
   describe('setDocumentProperties', () => {
     it('sets the data of a mutable document with an object', () => {
       const { cleanup, db } = createTestDatabase({ child: {} })
-    
+
       const doc = getMutableDocument(db, 'child')!
       setDocumentProperties(doc, { name: 'blossom' })
-      
+
       expect(getDocumentProperties(doc)).toEqual({ name: 'blossom' })
 
       cleanup()
@@ -187,10 +186,10 @@ describe('document functions', () => {
 
     it('sets the data of a mutable document with an array', () => {
       const { cleanup, db } = createTestDatabase({ child: {} })
-    
+
       const doc = getMutableDocument(db, 'child')!
       setDocumentProperties(doc, [{ name: 'blossom' }])
-      
+
       expect(getDocumentProperties(doc)).toEqual({ 0: { name: 'blossom' } })
 
       cleanup()
@@ -200,12 +199,13 @@ describe('document functions', () => {
   describe('setDocumentJSON', () => {
     it('sets the data of a mutable document with a JSON string', () => {
       const { cleanup, db } = createTestDatabase({ child: {} })
-    
+
       const doc = getMutableDocument(db, 'child')!
       setDocumentJSON(doc, '{ "name": "blossom" }')
-      
+
       expect(getDocumentProperties(doc)).toEqual({ name: 'blossom' })
 
-      cleanup()})
+      cleanup()
+    })
   })
 })

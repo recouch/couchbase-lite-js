@@ -1,5 +1,16 @@
-import { createDocument, saveDocument, setDocumentProperties } from './Document'
-import { addQueryChangeListener, createQuery, executeQuery, explainQuery, getQueryParameters, setQueryParameters } from './Query'
+import {
+  addQueryChangeListener,
+  CBLJSONLanguage,
+  CBLN1QLLanguage,
+  createDocument,
+  createQuery,
+  executeQuery,
+  explainQuery,
+  getQueryParameters,
+  saveDocument,
+  setDocumentProperties,
+  setQueryParameters
+} from '../cblite'
 import { createTestDatabase, timeout } from './test-util'
 
 describe('query functions', () => {
@@ -97,6 +108,19 @@ describe('query functions', () => {
   describe('execute', () => {
     it('executes a JSON query', () => {
       const { cleanup, db } = createTestDatabase({ doc1: { name: 'Fiona' }, doc2: { name: 'Milo' } })
+      const query = createQuery(db, CBLJSONLanguage, '["SELECT", { "WHAT": [["."], [".", "_id"]], "FROM": [{ as: "value" }] }]')
+
+      const results = executeQuery(query)
+
+      expect(results).toHaveLength(2)
+      expect(results).toContainEqual({ id: 'doc1', value: { name: 'Fiona' } })
+      expect(results).toContainEqual({ id: 'doc2', value: { name: 'Milo' } })
+
+      cleanup()
+    })
+
+    it('executes a JSON query when passing an object as the 2nd param', () => {
+      const { cleanup, db } = createTestDatabase({ doc1: { name: 'Fiona' }, doc2: { name: 'Milo' } })
       const query = createQuery(db, ['SELECT', { WHAT: [['.'], ['.', '_id']], FROM: [{ as: 'value' }] }])
 
       const results = executeQuery(query)
@@ -109,6 +133,19 @@ describe('query functions', () => {
     })
 
     it('executes a N1QL query', () => {
+      const { cleanup, db } = createTestDatabase({ doc1: { name: 'Fiona' }, doc2: { name: 'Milo' } })
+      const query = createQuery(db, CBLN1QLLanguage, 'SELECT _id, * FROM _ AS value')
+
+      const results = executeQuery(query)
+
+      expect(results).toHaveLength(2)
+      expect(results).toContainEqual({ id: 'doc1', value: { name: 'Fiona' } })
+      expect(results).toContainEqual({ id: 'doc2', value: { name: 'Milo' } })
+
+      cleanup()
+    })
+
+    it('executes a N1QL query when passing a string as the 2nd param', () => {
       const { cleanup, db } = createTestDatabase({ doc1: { name: 'Fiona' }, doc2: { name: 'Milo' } })
       const query = createQuery(db, 'SELECT _id, * FROM _ AS value')
 

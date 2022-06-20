@@ -1,7 +1,81 @@
-export * from './fp/Blob'
-export * from './fp/Database'
-export * from './fp/Document'
-export * from './fp/Query'
-export * from './fp/Replicator'
+export {
+  addDatabaseChangeListener,
+  addDocumentChangeListener,
+  addDocumentReplicationListener,
+  addQueryChangeListener,
+  addReplicatorChangeListener,
+  beginTransaction,
+  blobContent,
+  blobContentType,
+  blobCreateJson,
+  blobDigest,
+  blobEquals,
+  blobLength,
+  blobProperties,
+  closeBlobReader,
+  closeBlobWriter,
+  closeDatabase,
+  createBlobWithStream,
+  createBlobWriter,
+  createDocument,
+  createQuery,
+  createReplicator,
+  databaseGetBlob,
+  databaseName,
+  databasePath,
+  databaseSaveBlob,
+  deleteDatabase,
+  deleteDocument,
+  documentGetBlob,
+  documentIsBlob,
+  documentSetBlob,
+  documentsPendingReplication,
+  endTransaction,
+  executeQuery,
+  explainQuery,
+  getDocument,
+  getDocumentID,
+  getDocumentProperties,
+  getMutableDocument,
+  getQueryParameters,
+  isDocumentPendingReplication,
+  openBlobContentStream,
+  readBlobReader,
+  replicatorConfiguration,
+  replicatorStatus,
+  saveDocument,
+  setDocumentProperties,
+  setQueryParameters,
+  startReplicator,
+  stopReplicator,
+  writeBlobWriter
+} from './cblite'
+export {
+  BlobMetadata,
+  BlobReadStreamRef,
+  BlobRef,
+  BlobWriteStreamRef,
+  DatabaseChangeListener,
+  DatabaseRef,
+  DocumentChangeListener,
+  DocumentRef,
+  DocumentReplicationListener,
+  MutableDocumentRef,
+  QueryChangeListener,
+  QueryLanguage,
+  QueryRef,
+  RemoveDatabaseChangeListener,
+  RemoveDocumentChangeListener,
+  RemoveDocumentReplicationListener,
+  RemoveQueryChangeListener,
+  RemoveReplicatorChangeListener,
+  ReplicatorChangeListener,
+  ReplicatorConfiguration,
+  ReplicatorRef,
+  ReplicatorStatus
+} from './types'
+export {
+  abortTransaction,
+  commitTransaction
+} from './fp/Database'
 export * from './fp/scope'
-export * from './types'

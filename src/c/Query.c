@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "cbl/CouchbaseLite.h"
 #include "Listener.h"
+#include "NapiConvert.h"
 #include "util.h"
 
 static void finalize_query_external(napi_env env, void *data, void *hint)
@@ -17,23 +18,44 @@ static void finalize_query_external(napi_env env, void *data, void *hint)
 napi_value Database_CreateQuery(napi_env env, napi_callback_info info)
 {
   size_t argc = 3;
-  napi_value args[argc]; // [database, language, query]
+  napi_value args[argc]; // [database, language, query] | [database, N1QL query] | [database, JSON object]
 
   CBLError err;
   external_database_ref *databaseRef;
-  uint32_t language;
 
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
   CHECK(napi_get_value_external(env, args[0], (void *)&databaseRef));
-  CHECK(napi_get_value_int32(env, args[1], (int32_t *)&language));
-  size_t str_size;
-  CHECK(napi_get_value_string_utf8(env, args[2], NULL, 0, &str_size));
-  char *queryString;
-  queryString = (char *)calloc(str_size + 1, sizeof(char));
-  str_size = str_size + 1;
-  CHECK(napi_get_value_string_utf8(env, args[2], queryString, str_size, NULL));
 
-  CBLQuery *query = CBLDatabase_CreateQuery(databaseRef->database, language, FLStr(queryString), NULL, &err);
+  napi_valuetype args1Type;
+  CHECK(napi_typeof(env, args[1], &args1Type));
+
+  CBLQuery *query;
+
+  if (args1Type == napi_string)
+  {
+    // Assume N1QL
+    FLString queryString = napiValueToFLString(env, args[1]);
+
+    query = CBLDatabase_CreateQuery(databaseRef->database, kCBLN1QLLanguage, queryString, NULL, &err);
+  }
+  else if (args1Type == napi_object)
+  {
+    // Assume JSON
+    FLMutableArray jsonArray = napiValueToFLArray(env, args[1]);
+    FLString queryString = FLSliceResult_AsSlice(FLValue_ToJSON((FLValue)jsonArray));
+    FLMutableArray_Release(jsonArray);
+
+    query = CBLDatabase_CreateQuery(databaseRef->database, kCBLJSONLanguage, queryString, NULL, &err);
+  }
+  else
+  {
+    // Use language passed in
+    uint32_t language;
+    CHECK(napi_get_value_uint32(env, args[1], &language));
+    FLString queryString = napiValueToFLString(env, args[2]);
+
+    query = CBLDatabase_CreateQuery(databaseRef->database, language, queryString, NULL, &err);
+  }
 
   if (!query)
   {
@@ -48,7 +70,7 @@ napi_value Database_CreateQuery(napi_env env, napi_callback_info info)
   return res;
 }
 
-FLStringResult ResultSet_ToJSON(CBLResultSet *results)
+FLMutableArray ResultSet_ToFLMutableArray(CBLResultSet *results)
 {
   FLMutableArray resultsArray = FLMutableArray_New();
 
@@ -58,18 +80,14 @@ FLStringResult ResultSet_ToJSON(CBLResultSet *results)
     FLMutableArray_AppendDict(resultsArray, result);
   }
 
-  FLStringResult json = FLValue_ToJSON((FLValue)resultsArray);
-
-  FLMutableArray_Release(resultsArray);
-
-  return json;
+  return resultsArray;
 }
 
 // CBLQuery_Execute
 napi_value Query_Execute(napi_env env, napi_callback_info info)
 {
   size_t argc = 1;
-  napi_value args[argc]; // [database, language, query]
+  napi_value args[argc];
 
   CBLError err;
 
@@ -87,11 +105,11 @@ napi_value Query_Execute(napi_env env, napi_callback_info info)
     return NULL;
   }
 
-  FLStringResult json = ResultSet_ToJSON(results);
+  FLMutableArray resultsArray = ResultSet_ToFLMutableArray(results);
   CBLResultSet_Release(results);
-  napi_value res;
-  CHECK(napi_create_string_utf8(env, json.buf, json.size, &res));
-  FLSliceResult_Release(json);
+
+  napi_value res = flArrayToNapiValue(env, resultsArray);
+  FLMutableArray_Release(resultsArray);
 
   return res;
 }
@@ -100,7 +118,7 @@ napi_value Query_Execute(napi_env env, napi_callback_info info)
 napi_value Query_Explain(napi_env env, napi_callback_info info)
 {
   size_t argc = 1;
-  napi_value args[argc]; // [database, language, query]
+  napi_value args[argc];
 
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
 
@@ -119,7 +137,7 @@ napi_value Query_Explain(napi_env env, napi_callback_info info)
 napi_value Query_Parameters(napi_env env, napi_callback_info info)
 {
   size_t argc = 1;
-  napi_value args[argc]; // [database, language, query]
+  napi_value args[argc];
 
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
 
@@ -127,10 +145,8 @@ napi_value Query_Parameters(napi_env env, napi_callback_info info)
   CHECK(napi_get_value_external(env, args[0], (void *)&queryRef));
   CBLQuery *query = queryRef->query;
 
-  napi_value res;
   FLDict parameters = CBLQuery_Parameters(query);
-  FLSliceResult json = FLValue_ToJSON((FLValue)parameters);
-  CHECK(napi_create_string_utf8(env, json.buf, json.size, &res));
+  napi_value res = flDictToNapiValue(env, parameters);
 
   return res;
 }
@@ -139,7 +155,7 @@ napi_value Query_Parameters(napi_env env, napi_callback_info info)
 napi_value Query_SetParameters(napi_env env, napi_callback_info info)
 {
   size_t argc = 2;
-  napi_value args[argc]; // [database, language, query]
+  napi_value args[argc];
 
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
 
@@ -147,22 +163,7 @@ napi_value Query_SetParameters(napi_env env, napi_callback_info info)
   CHECK(napi_get_value_external(env, args[0], (void *)&queryRef));
   CBLQuery *query = queryRef->query;
 
-  size_t str_size;
-  napi_get_value_string_utf8(env, args[1], NULL, 0, &str_size);
-  char *json;
-  json = (char *)calloc(str_size + 1, sizeof(char));
-  str_size = str_size + 1;
-  napi_get_value_string_utf8(env, args[1], json, str_size, NULL);
-
-  FLDoc parametersDoc = FLDoc_FromJSON(FLStr(json), NULL);
-
-  if (!parametersDoc)
-  {
-    CHECK(napi_throw_error(env, "", "An error occured"));
-    return NULL;
-  }
-
-  FLDict parameters = FLValue_AsDict(FLDoc_GetRoot(parametersDoc));
+  FLDict parameters = napiValueToFLDict(env, args[1]);
 
   CBLQuery_SetParameters(query, parameters);
 
@@ -182,16 +183,12 @@ static void QueryChangeListener(void *cb, CBLQuery *query, CBLListenerToken *tok
     return;
   }
 
-  FLStringResult json = ResultSet_ToJSON(results);
-  char *data;
-  data = malloc(json.size + 1);
-  assert(FLSlice_ToCString(FLSliceResult_AsSlice(json), data, json.size + 1) == true);
+  FLMutableArray resultsArray = ResultSet_ToFLMutableArray(results);
 
-  FLSliceResult_Release(json);
   CBLResultSet_Release(results);
 
   CHECK(napi_acquire_threadsafe_function((napi_threadsafe_function)cb));
-  CHECK(napi_call_threadsafe_function((napi_threadsafe_function)cb, data, napi_tsfn_nonblocking));
+  CHECK(napi_call_threadsafe_function((napi_threadsafe_function)cb, (void *)resultsArray, napi_tsfn_nonblocking));
   CHECK(napi_release_threadsafe_function((napi_threadsafe_function)cb, napi_tsfn_release));
 }
 
@@ -200,21 +197,21 @@ static void QueryChangeListenerCallJS(napi_env env, napi_value js_cb, void *cont
   napi_value undefined;
   CHECK(napi_get_undefined(env, &undefined));
 
+  FLMutableArray resultsArray = (FLMutableArray)data;
+
   napi_value args[1];
-  napi_value json;
-  CHECK(napi_create_string_utf8(env, (char *)data, NAPI_AUTO_LENGTH, &json));
-  args[0] = json;
+  args[0] = flArrayToNapiValue(env, resultsArray);
 
   CHECK(napi_call_function(env, undefined, js_cb, 1, args, NULL));
 
-  free(data);
+  FLMutableArray_Release(resultsArray);
 }
 
 // CBLQuery_AddChangeListener
 napi_value Query_AddChangeListener(napi_env env, napi_callback_info info)
 {
   size_t argc = 2;
-  napi_value args[argc]; // [database, language, query]
+  napi_value args[argc];
 
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
 

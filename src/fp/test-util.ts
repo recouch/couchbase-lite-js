@@ -1,8 +1,7 @@
 import fs from 'fs'
 import { join } from 'path'
 import { nanoid } from 'nanoid'
-import { deleteDatabase, deleteDatabaseByName, openDatabase } from './Database'
-import { createDocument, saveDocument, setDocumentProperties } from './Document'
+import { deleteDatabase, openDatabase, createDocument, saveDocument, setDocumentProperties } from '../cblite'
 
 export const testDirectory = join(__dirname, '../../test-output')
 
@@ -18,7 +17,7 @@ export function createTestDatabase(initDocs: { [id: string]: Record<string, unkn
     } catch (e) {
       console.error('An error occured while deleting the database:', e)
 
-      deleteDatabaseByName(dbName, testDirectory)
+      deleteDatabase(dbName, testDirectory)
     }
   }
 

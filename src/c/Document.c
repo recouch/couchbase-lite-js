@@ -192,39 +192,33 @@ napi_value Database_SaveDocument(napi_env env, napi_callback_info info)
 }
 
 // CBLDocument_Create
+// CBLDocument_CreateWithID
 napi_value Document_Create(napi_env env, napi_callback_info info)
 {
-  CBLDocument *doc = CBLDocument_Create();
-
-  napi_value res;
-  external_document_ref *documentRef = createExternalDocumentRef(doc);
-  CHECK(napi_create_external(env, documentRef, finalize_document_external, NULL, &res));
-
-  return res;
-}
-
-// CBLDocument_CreateWithID
-napi_value Document_CreateWithID(napi_env env, napi_callback_info info)
-{
-
   size_t argc = 1;
   napi_value args[1];
   CHECK(napi_get_cb_info(env, info, &argc, args, NULL, NULL));
 
-  napi_valuetype valuetype0;
-  CHECK(napi_typeof(env, args[0], &valuetype0));
+  CBLDocument *doc;
 
-  if (valuetype0 != napi_string)
+  if (argc == 1)
   {
-    napi_throw_type_error(env, NULL, "Wrong arguments");
-    return NULL;
+    napi_valuetype valuetype0;
+    CHECK(napi_typeof(env, args[0], &valuetype0));
+
+    if (valuetype0 != napi_string)
+    {
+      napi_throw_type_error(env, NULL, "Wrong arguments");
+      return NULL;
+    }
+
+    FLString docID = napiValueToFLString(env, args[0]);
+    doc = CBLDocument_CreateWithID(docID);
   }
-
-  size_t buffer_size = 128;
-  char docID[buffer_size];
-  napi_get_value_string_utf8(env, args[0], docID, buffer_size, NULL);
-
-  CBLDocument *doc = CBLDocument_CreateWithID(FLStr(docID));
+  else
+  {
+    doc = CBLDocument_Create();
+  }
 
   napi_value res;
   external_document_ref *documentRef = createExternalDocumentRef(doc);
