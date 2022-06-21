@@ -1,7 +1,21 @@
 {
-  "name": "couchbase-lite",
-  "version": "0.1.0",
-  "description": "",
+  "name": "@recouch/couchbase-lite",
+  "version": "0.1.1",
+  "description": "Node.js bindings for Couchbase Lite.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/recouch/couchbase-lite-js.git"
+  },
+  "files": [
+    "dist",
+    "src/c",
+    "binding.gyp",
+    "build-for-electron.sh",
+    "fetch-source.mjs",
+    "LICENSE",
+    "README.md",
+    "sources.mjs"
+  ],
   "main": "dist/index.js",
   "scripts": {
     "build:c": "node-gyp build",
@@ -9,8 +23,10 @@
     "build": "npm run build:c && npm run build:ts",
     "build-for-electron": "./build-for-electron.sh",
     "docs": "typedoc src/index.ts",
-    "fetch-source": "node ./fetch-source",
+    "fetch-source": "node ./fetch-source.mjs",
     "install": "echo 'no install'",
+    "prepare": "npm run build:ts",
+    "postinstall": "node-gyp configure & npm run fetch-source & npm run build:c",
     "rebuild": "node-gyp rebuild",
     "test": "jest",
     "test:watch": "jest --watch"
@@ -27,16 +43,16 @@
     "bindings": "^1.5.0",
     "caniuse-lite": "^1.0.30001356",
     "extract-zip": "^2.0.1",
-    "got": "^12.1.0",
+    "needle": "^3.1.0",
     "node-gyp": "^9.0.0"
   },
   "devDependencies": {
     "@types/bindings": "^1.5.1",
     "@types/extract-zip": "^2.0.1",
-    "@types/got": "^9.6.12",
     "@types/jest": "^28.1.1",
     "@types/lodash": "^4.14.182",
     "@types/nanoid": "^3.0.0",
+    "@types/needle": "^2.5.3",
     "@types/typescript": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",

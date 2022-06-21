@@ -1,4 +1,6 @@
 export {
+  CBLJSONLanguage,
+  CBLN1QLLanguage,
   addDatabaseChangeListener,
   addDocumentChangeListener,
   addDocumentReplicationListener,
@@ -15,6 +17,7 @@ export {
   closeBlobReader,
   closeBlobWriter,
   closeDatabase,
+  createBlobWithData,
   createBlobWithStream,
   createBlobWriter,
   createDocument,
@@ -40,6 +43,7 @@ export {
   getQueryParameters,
   isDocumentPendingReplication,
   openBlobContentStream,
+  openDatabase,
   readBlobReader,
   replicatorConfiguration,
   replicatorStatus,
