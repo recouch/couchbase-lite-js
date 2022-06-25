@@ -27,7 +27,7 @@ describe('document functions', () => {
       saveDocument(db, doc2)
       expect(fn).not.toHaveBeenCalled()
 
-      expect(stop()).toBe(true)
+      stop()
 
       cleanup()
     })

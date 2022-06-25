@@ -27,7 +27,8 @@ describe('database functions', () => {
         const { cleanup, db } = createTestDatabase()
         const doc = createDocument()
         const fn = jest.fn((ids: string[]) => {
-          expect(stop()).toBe(true)
+          stop()
+
           cleanup()
 
           expect(ids).toEqual([getDocumentID(doc)])
@@ -41,6 +42,18 @@ describe('database functions', () => {
         saveDocument(db, doc)
       })
     )
+
+    it('does not throw when calling stop multiple times', () => {
+      const { cleanup, db } = createTestDatabase()
+      const stop = addDatabaseChangeListener(db, jest.fn())
+
+      expect(typeof stop).toBe('function')
+
+      stop()
+      expect(stop).not.toThrow()
+
+      cleanup()
+    })
   })
 
   describe('closeDatabase', () => {

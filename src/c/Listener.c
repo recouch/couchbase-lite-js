@@ -1,14 +1,4 @@
-#include <assert.h>
-#include <node_api.h>
-#include <stdio.h>
-#include "cbl/CouchbaseLite.h"
-#include "util.h"
-
-typedef struct StopListenerData
-{
-  napi_threadsafe_function callback;
-  CBLListenerToken *token;
-} stop_listener_data;
+#include "Listener.h"
 
 // CBLListener_Remove
 napi_value Listener_Remove(napi_env env, napi_callback_info info)
@@ -30,8 +20,9 @@ napi_value Listener_Remove(napi_env env, napi_callback_info info)
 
 stop_listener_data *newStopListenerData(napi_threadsafe_function callback, CBLListenerToken *token)
 {
-  stop_listener_data *stopListenerData = malloc(sizeof(callback) + sizeof(token));
+  stop_listener_data *stopListenerData = malloc(sizeof(callback) + sizeof(token) + sizeof(bool));
   stopListenerData->callback = callback;
+  stopListenerData->isListening = true;
   stopListenerData->token = token;
 
   return stopListenerData;
@@ -39,16 +30,25 @@ stop_listener_data *newStopListenerData(napi_threadsafe_function callback, CBLLi
 
 napi_value StopChangeListener(napi_env env, napi_callback_info info)
 {
+  napi_value res;
+  CHECK(napi_get_undefined(env, &res));
+
   stop_listener_data *data;
   CHECK(napi_get_cb_info(env, info, NULL, NULL, NULL, (void *)&data));
 
+  if (data == NULL)
+  {
+    return res;
+  }
+
+  if (!data->isListening)
+  {
+    return res;
+  }
+
   CBLListener_Remove(data->token);
+  data->isListening = false;
   CHECK(napi_release_threadsafe_function(data->callback, napi_tsfn_abort));
-
-  napi_value res;
-  CHECK(napi_get_boolean(env, true, &res));
-
-  free(data);
 
   return res;
 }
