@@ -1,6 +1,6 @@
 {
   "name": "@recouch/couchbase-lite",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Node.js bindings for Couchbase Lite.",
   "repository": {
     "type": "git",
